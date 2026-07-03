@@ -1,0 +1,2427 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FI-058: Engineering Notebook</title>
+    <style>
+      :root {
+        --bg: #efe2c6;
+        --bg2: #d9bd8f;
+        --surface: #fff8e9;
+        --surface2: #f5e6c8;
+        --ink: #282318;
+        --muted: #6b5f4a;
+        --line: rgba(68, 48, 23, 0.22);
+        --strong: rgba(68, 48, 23, 0.42);
+        --accent: #2f7299;
+        --accent2: #9a5532;
+        --danger: #a33c35;
+        --ok: #3f7f51;
+        --warn: #a96f24;
+        --purple: #7163a8;
+        --shadow: 0 18px 44px rgba(59, 39, 15, 0.18);
+        --card: 0 9px 20px rgba(61, 39, 12, 0.18);
+        --radius: 22px;
+        --sans:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        --mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", monospace;
+        --serif: Georgia, "Times New Roman", serif;
+      }
+      [data-theme="dark"] {
+        --bg: #111512;
+        --bg2: #1d251f;
+        --surface: #20251f;
+        --surface2: #171d18;
+        --ink: #efe7d3;
+        --muted: #b6a98e;
+        --line: rgba(239, 231, 211, 0.16);
+        --strong: rgba(239, 231, 211, 0.28);
+        --accent: #83bde0;
+        --accent2: #e29d64;
+        --danger: #ec837a;
+        --ok: #8fcf9b;
+        --warn: #e2b15e;
+        --purple: #b4a9eb;
+        --shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
+        --card: 0 9px 20px rgba(0, 0, 0, 0.25);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background:
+          radial-gradient(
+            circle at 20% 0%,
+            rgba(255, 255, 255, 0.34),
+            transparent 34%
+          ),
+          linear-gradient(135deg, var(--bg), var(--bg2));
+        min-height: 100vh;
+      }
+      body:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.22;
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: linear-gradient(to bottom, black, transparent 92%);
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        border: 1px solid var(--strong);
+        background: var(--surface);
+        border-radius: 999px;
+        padding: 0.6rem 0.9rem;
+        cursor: pointer;
+        box-shadow: 0 2px 0 var(--strong);
+        transition:
+          0.15s transform,
+          0.15s box-shadow,
+          0.15s background;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(1px);
+        box-shadow: none;
+      }
+      .primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .danger {
+        background: color-mix(in srgb, var(--danger), var(--surface) 84%);
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+      .ghost {
+        background: transparent;
+        box-shadow: none;
+      }
+      .small {
+        font-size: 0.82rem;
+        padding: 0.38rem 0.62rem;
+      }
+      .pill {
+        display: inline-flex;
+        gap: 0.3rem;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.2rem 0.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--strong);
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 0.72rem 0.82rem;
+        outline: none;
+      }
+      textarea {
+        min-height: 118px;
+        resize: vertical;
+      }
+      .app {
+        width: min(100% - 28px, 1540px);
+        margin: 0 auto;
+        padding: 16px 0 34px;
+      }
+      .topbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .brand {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .mark {
+        width: 62px;
+        height: 62px;
+        border-radius: 18px;
+        background: linear-gradient(145deg, var(--accent), var(--accent2));
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 1.8rem;
+        box-shadow: var(--shadow);
+        transform: rotate(-3deg);
+      }
+      h1 {
+        margin: 0.1rem 0 0.2rem;
+        font-size: clamp(1.7rem, 3vw, 3rem);
+        line-height: 1;
+        font-family: var(--serif);
+      }
+      .version {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        border: 1px dashed var(--strong);
+        border-radius: 999px;
+        padding: 0.22rem 0.5rem;
+        display: inline-block;
+        margin-left: 0.4rem;
+        letter-spacing: 0;
+      }
+      .subtitle {
+        color: var(--muted);
+        max-width: 900px;
+      }
+      .top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: color-mix(in srgb, var(--surface), transparent 4%);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .panel-pad {
+        padding: 18px;
+      }
+      .panel-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .panel-title h2,
+      .panel-title h3 {
+        margin: 0;
+      }
+      .controls {
+        display: grid;
+        gap: 9px;
+        margin-bottom: 12px;
+      }
+      .search-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+      .nav-tabs,
+      .view-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0 0 12px;
+      }
+      .tab {
+        box-shadow: none;
+        background: color-mix(in srgb, var(--surface), transparent 8%);
+      }
+      .tab.active {
+        background: var(--ink);
+        color: var(--surface);
+        border-color: var(--ink);
+      }
+      .project-list {
+        display: grid;
+        gap: 10px;
+        max-height: calc(100vh - 310px);
+        overflow: auto;
+        padding-right: 3px;
+      }
+      .project-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--surface);
+        padding: 13px;
+        box-shadow: var(--card);
+        cursor: pointer;
+        transform: rotate(var(--tilt, 0deg));
+      }
+      .project-card.active {
+        outline: 3px solid color-mix(in srgb, var(--accent), transparent 55%);
+      }
+      .project-card h3 {
+        margin: 0.1rem 0 0.4rem;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .healthbar {
+        height: 9px;
+        border-radius: 999px;
+        background: var(--surface2);
+        border: 1px solid var(--line);
+        overflow: hidden;
+      }
+      .healthbar span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--danger),
+          var(--warn),
+          var(--ok)
+        );
+        width: var(--w, 50%);
+      }
+      .workspace {
+        min-height: 76vh;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        padding: 22px;
+        background: linear-gradient(
+          120deg,
+          color-mix(in srgb, var(--surface), white 10%),
+          color-mix(in srgb, var(--surface2), transparent 5%)
+        );
+        border-bottom: 1px solid var(--line);
+      }
+      .hero h2 {
+        font-size: clamp(1.7rem, 3vw, 2.8rem);
+        margin: 0.1rem 0;
+      }
+      .hero-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-content: flex-start;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(105px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.18);
+        padding: 12px;
+      }
+      .stat strong {
+        font-size: 1.45rem;
+        display: block;
+      }
+      .main-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 16px;
+        padding: 16px;
+      }
+      .entry-list {
+        display: grid;
+        gap: 12px;
+      }
+      .entry-card {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: var(--card);
+        overflow: hidden;
+      }
+      .entry-card:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 7px;
+        background: var(--entry-color, var(--accent));
+      }
+      .entry-header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .entry-card h3 {
+        margin: 0.1rem 0 0.25rem;
+      }
+      .entry-body {
+        white-space: pre-wrap;
+        line-height: 1.45;
+        color: color-mix(in srgb, var(--ink), var(--muted) 15%);
+      }
+      .entry-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .stamp {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid currentColor;
+        border-radius: 8px;
+        padding: 0.18rem 0.42rem;
+        font-family: var(--mono);
+        font-weight: 800;
+        transform: rotate(-4deg);
+        letter-spacing: 0.04em;
+      }
+      .stamp.fail {
+        color: var(--danger);
+      }
+      .stamp.pass {
+        color: var(--ok);
+      }
+      .stamp.warn {
+        color: var(--warn);
+      }
+      .side-stack {
+        display: grid;
+        gap: 12px;
+      }
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--surface), transparent 7%);
+        padding: 12px;
+      }
+      .timeline {
+        position: relative;
+        padding-left: 18px;
+      }
+      .timeline:before {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 6px;
+        bottom: 6px;
+        width: 3px;
+        background: linear-gradient(var(--accent), var(--accent2));
+        border-radius: 999px;
+      }
+      .timeline-item {
+        position: relative;
+        margin: 0 0 12px;
+      }
+      .timeline-item:before {
+        content: "";
+        position: absolute;
+        left: -17px;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 3px solid var(--accent);
+      }
+      .garden {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+        gap: 12px;
+      }
+      .garden-card {
+        border: 1px solid var(--line);
+        border-radius: 24px 24px 18px 18px;
+        padding: 16px;
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--surface), var(--danger) 8%),
+          var(--surface)
+        );
+        box-shadow: var(--card);
+        min-height: 150px;
+      }
+      .garden-icon {
+        font-size: 2rem;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .report-box,
+      .calculator-box {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--surface);
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+      .calc-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .calc-result {
+        font-family: var(--mono);
+        white-space: pre-wrap;
+        background: rgba(0, 0, 0, 0.06);
+        border: 1px dashed var(--strong);
+        border-radius: 16px;
+        padding: 12px;
+        margin-top: 10px;
+      }
+      .rows {
+        display: grid;
+        gap: 8px;
+      }
+      .measure-row,
+      .calc-row,
+      .attachment-row {
+        display: grid;
+        grid-template-columns: 1.1fr 0.7fr 0.6fr 1.4fr auto;
+        gap: 8px;
+      }
+      .attachment-row {
+        grid-template-columns: 1fr auto auto;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .wide {
+        grid-column: 1/-1;
+      }
+      label span {
+        display: block;
+        font-weight: 800;
+        font-size: 0.82rem;
+        margin: 0 0 5px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        place-items: center;
+        background: rgba(0, 0, 0, 0.46);
+        z-index: 30;
+        padding: 16px;
+      }
+      .modal-backdrop.open {
+        display: grid;
+      }
+      .modal {
+        width: min(980px, 100%);
+        max-height: 92vh;
+        overflow: auto;
+        background: var(--surface);
+        border: 1px solid var(--strong);
+        border-radius: 26px;
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35);
+      }
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+        z-index: 2;
+      }
+      .modal-foot {
+        border-top: 1px solid var(--line);
+        border-bottom: 0;
+        bottom: 0;
+        top: auto;
+      }
+      .modal-body {
+        padding: 16px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .empty {
+        border: 2px dashed var(--strong);
+        border-radius: 24px;
+        padding: 28px;
+        text-align: center;
+        color: var(--muted);
+        background: color-mix(in srgb, var(--surface), transparent 16%);
+      }
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 40;
+        background: var(--ink);
+        color: var(--surface);
+        border-radius: 999px;
+        padding: 0.75rem 1rem;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition: 0.2s;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .autosave {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.78rem;
+      }
+      .sketch-wrap {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .sketch-tools {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 8px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface2);
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 220px;
+        touch-action: none;
+        background: #fff;
+      }
+      .thumb {
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        margin-top: 8px;
+      }
+      .footer-note {
+        padding: 10px 18px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        border-top: 1px solid var(--line);
+      }
+      @media (max-width: 1120px) {
+        .layout,
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+        .project-list {
+          max-height: none;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        }
+        .stats {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 760px) {
+        .app {
+          width: min(100% - 14px, 1540px);
+          padding-top: 8px;
+        }
+        .topbar,
+        .hero,
+        .entry-header,
+        .compare {
+          grid-template-columns: 1fr;
+        }
+        .top-actions,
+        .hero-actions,
+        .entry-actions {
+          justify-content: flex-start;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .form-grid,
+        .measure-row,
+        .calc-row,
+        .calc-grid {
+          grid-template-columns: 1fr;
+        }
+        .brand {
+          align-items: flex-start;
+        }
+        .mark {
+          width: 52px;
+          height: 52px;
+          font-size: 1.45rem;
+        }
+      }
+      @media print {
+        body {
+          background: #fff;
+        }
+        body:before,
+        .top-actions,
+        .sidebar,
+        .hero-actions,
+        .entry-actions,
+        .side-stack,
+        .view-tabs,
+        .nav-tabs {
+          display: none !important;
+        }
+        .app {
+          width: 100%;
+          padding: 0;
+        }
+        .layout,
+        .main-grid {
+          display: block;
+        }
+        .panel,
+        .entry-card,
+        .stat,
+        .report-box {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+        .workspace {
+          border: 0;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="light">
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark">✦</div>
+          <div>
+            <h1>
+              FI-058: Engineering Notebook <span class="version">v2.0.1</span>
+            </h1>
+            <div class="subtitle">
+              A whimsical engineering record that connects ideas, calculations,
+              builds, tests, failures, repairs, revisions, and lessons learned.
+            </div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button id="themeBtn">☾ Theme</button
+          ><button id="sampleBtn">Load Sample Data</button
+          ><button id="clearBtn" class="danger">Clear Data</button
+          ><button id="importBtn">Import JSON</button
+          ><button id="exportJsonBtn">Export JSON</button
+          ><button id="exportMdBtn">Export Markdown</button
+          ><button id="exportCsvBtn">Failure CSV</button
+          ><button id="printBtn">Print</button>
+        </div>
+      </header>
+      <main class="layout">
+        <aside class="panel sidebar">
+          <div class="panel-pad">
+            <div class="panel-title">
+              <h2>Projects</h2>
+              <button id="newProjectBtn" class="primary small">
+                + Project
+              </button>
+            </div>
+            <div class="controls">
+              <div class="search-row">
+                <input
+                  id="searchInput"
+                  placeholder="Search projects, entries, tags…"
+                /><button id="clearSearchBtn" class="small">×</button>
+              </div>
+              <select id="statusFilter"></select
+              ><select id="sortSelect">
+                <option value="updated">Recently updated</option>
+                <option value="health">Health score</option>
+                <option value="failures">Open failures</option>
+                <option value="name">Name</option>
+              </select>
+              <div class="autosave" id="autosaveState">autosave ready</div>
+            </div>
+            <div class="project-list" id="projectList"></div>
+          </div>
+        </aside>
+        <section class="panel workspace" id="workspace"></section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="projectModal">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="projectModalTitle">Project</h2>
+          <button class="ghost" data-close="projectModal">✕</button>
+        </div>
+        <form id="projectForm">
+          <div class="modal-body form-grid">
+            <input type="hidden" id="projectId" /><label
+              ><span>Name</span><input id="projectName" required /></label
+            ><label
+              ><span>Status</span
+              ><select id="projectStatus"></select></label
+            ><label
+              ><span>Revision</span
+              ><input
+                id="projectRevision"
+                placeholder="Rev A, Prototype 1…" /></label
+            ><label
+              ><span>Owner / shop</span
+              ><input id="projectOwner" placeholder="optional" /></label
+            ><label
+              ><span>Tags</span
+              ><input
+                id="projectTags"
+                placeholder="comma, separated, tags" /></label
+            ><label
+              ><span>Target date</span
+              ><input id="projectTarget" type="date" /></label
+            ><label class="wide"
+              ><span>Description</span
+              ><textarea id="projectDescription" required></textarea></label
+            ><label class="wide"
+              ><span>Next Action</span
+              ><input
+                id="projectNextAction"
+                placeholder="What should happen next?"
+            /></label>
+          </div>
+          <div class="modal-foot">
+            <button type="button" id="deleteProjectBtn" class="danger">
+              Delete Project
+            </button>
+            <div>
+              <button type="button" data-close="projectModal">Cancel</button>
+              <button class="primary" type="submit">Save Project</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="entryModal">
+      <div class="modal">
+        <div class="modal-head">
+          <h2 id="entryModalTitle">Notebook Entry</h2>
+          <button class="ghost" data-close="entryModal">✕</button>
+        </div>
+        <form id="entryForm">
+          <div class="modal-body">
+            <input type="hidden" id="entryId" />
+            <div class="form-grid">
+              <label
+                ><span>Project</span
+                ><select id="entryProjectId"></select></label
+              ><label
+                ><span>Entry Type</span
+                ><select id="entryType"></select></label
+              ><label
+                ><span>Title</span><input id="entryTitle" required /></label
+              ><label
+                ><span>Date</span
+                ><input id="entryDate" type="date" required /></label
+              ><label
+                ><span>Revision</span
+                ><input id="entryRevision" placeholder="Rev A" /></label
+              ><label
+                ><span>Status</span
+                ><select id="entryStatus"></select></label
+              ><label
+                ><span>Tags</span
+                ><input
+                  id="entryTags"
+                  placeholder="comma, separated, tags" /></label
+              ><label
+                ><span>Related Entries</span
+                ><select id="entryRelated" multiple size="4"></select></label
+              ><label class="wide"
+                ><span>Body Notes</span
+                ><textarea
+                  id="entryBody"
+                  placeholder="Capture the useful truth. Future you is reading."
+                ></textarea>
+              </label>
+            </div>
+            <section id="testFields" class="form-grid hidden">
+              <label class="wide"
+                ><span>Test Objective</span><input id="testObjective" /></label
+              ><label class="wide"
+                ><span>Test Setup</span
+                ><textarea id="testSetup"></textarea></label
+              ><label
+                ><span>Expected Result</span
+                ><input id="expectedResult" /></label
+              ><label
+                ><span>Actual Result</span><input id="actualResult" /></label
+              ><label
+                ><span>Equipment</span
+                ><input
+                  id="testEquipment"
+                  placeholder="meter, calipers, fixture…" /></label
+              ><label
+                ><span>Environment</span
+                ><input
+                  id="testEnvironment"
+                  placeholder="ambient temp, supply voltage…"
+              /></label>
+            </section>
+            <section id="failureFields" class="form-grid hidden">
+              <label
+                ><span>Severity</span
+                ><select id="failureSeverity">
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                  <option>Critical</option>
+                </select></label
+              ><label
+                ><span>Affected Subsystem</span
+                ><input id="affectedSubsystem" /></label
+              ><label class="wide"
+                ><span>Symptoms</span
+                ><textarea id="failureSymptoms"></textarea></label
+              ><label
+                ><span>Suspected Cause</span
+                ><input id="suspectedCause" /></label
+              ><label
+                ><span>Confirmed Cause</span
+                ><input id="confirmedCause" /></label
+              ><label class="wide"
+                ><span>Corrective Action</span><input id="correctiveAction"
+              /></label>
+            </section>
+            <section class="report-box">
+              <div class="panel-title">
+                <h3>Measurements</h3>
+                <button type="button" id="addMeasurementBtn" class="small">
+                  + Measurement
+                </button>
+              </div>
+              <div id="measurementRows" class="rows"></div>
+            </section>
+            <section id="calcSection" class="report-box hidden">
+              <div class="panel-title">
+                <h3>Calculation Block</h3>
+                <button type="button" id="addCalcRowBtn" class="small">
+                  + Variable
+                </button>
+              </div>
+              <div id="calcRows" class="rows"></div>
+              <div
+                style="
+                  display: flex;
+                  gap: 8px;
+                  margin-top: 10px;
+                  flex-wrap: wrap;
+                "
+              >
+                <button type="button" id="runCalcBtn" class="primary small">
+                  Run Calculation</button
+                ><button type="button" id="ohmsLawBtn" class="small">Ohm</button
+                ><button type="button" id="runtimeBtn" class="small">
+                  Battery</button
+                ><button type="button" id="ledBtn" class="small">LED</button
+                ><button type="button" id="gearBtn" class="small">Gear</button>
+              </div>
+              <div class="calc-result" id="calcResult">
+                No calculation run yet.
+              </div>
+            </section>
+            <section class="report-box">
+              <div class="panel-title">
+                <h3>Attachments</h3>
+                <div>
+                  <input
+                    id="attachmentFile"
+                    type="file"
+                    accept="image/*,.txt,.csv,.json,.md"
+                    hidden
+                  /><button type="button" id="attachBtn" class="small">
+                    + File
+                  </button>
+                </div>
+              </div>
+              <div id="attachmentRows" class="rows"></div>
+            </section>
+            <section class="report-box">
+              <div class="panel-title">
+                <h3>Sketch Pad</h3>
+                <button type="button" id="saveSketchBtn" class="small">
+                  Save Sketch to Attachments
+                </button>
+              </div>
+              <div class="sketch-wrap">
+                <div class="sketch-tools">
+                  <button type="button" id="clearSketchBtn" class="small">
+                    Clear</button
+                  ><span class="pill">ink pad</span>
+                </div>
+                <canvas id="sketchCanvas" width="900" height="260"></canvas>
+              </div>
+            </section>
+          </div>
+          <div class="modal-foot">
+            <button type="button" id="deleteEntryBtn" class="danger">
+              Delete Entry
+            </button>
+            <div>
+              <button type="button" data-close="entryModal">Cancel</button>
+              <button class="primary" type="submit">Save Entry</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <input id="fileInput" type="file" accept="application/json,.json" hidden />
+    <div class="toast" id="toast">Saved</div>
+    <script>
+      const VERSION = "v2.0.1";
+      const STORAGE_KEY = "fi058_engineering_notebook_v2";
+      const OLD_STORAGE_KEY = "fi058_engineering_notebook_v1";
+      const THEME_KEY = "fi058_engineering_notebook_theme";
+      const projectStatuses = [
+        "Concept",
+        "Design",
+        "Prototype",
+        "Build",
+        "Test",
+        "Failure / Repair",
+        "Revision",
+        "Archive",
+      ];
+      const entryTypes = [
+        "Idea",
+        "Design Note",
+        "Calculation",
+        "Build Log",
+        "Test Note",
+        "Failure Report",
+        "Repair Log",
+        "Revision Note",
+        "Decision Record",
+        "Lesson Learned",
+      ];
+      const entryStatuses = [
+        "Draft",
+        "Active",
+        "Built",
+        "Tested",
+        "Passed",
+        "Failed",
+        "Needs Retest",
+        "Repaired",
+        "Superseded",
+        "Archived",
+        "Open",
+        "Investigating",
+        "Root Cause Found",
+        "Fixed",
+        "Closed",
+      ];
+      const typeColors = {
+        Idea: "#8a6dd6",
+        "Design Note": "#2f7299",
+        Calculation: "#3f7f51",
+        "Build Log": "#9a5532",
+        "Test Note": "#2d8b92",
+        "Failure Report": "#a33c35",
+        "Repair Log": "#a96f24",
+        "Revision Note": "#5765a8",
+        "Decision Record": "#6b7358",
+        "Lesson Learned": "#5d7f3f",
+      };
+      const CLOSED_FAILURE_STATUSES = [
+        "Fixed",
+        "Closed",
+        "Repaired",
+        "Retested",
+        "Archived",
+      ];
+      let state = {
+        projects: [],
+        entries: [],
+        selectedProjectId: null,
+        view: "notebook",
+        activeTab: "All",
+      };
+      let saveTimer = null;
+      let currentAttachments = [];
+      const $ = (id) => document.getElementById(id);
+      const uid = (p) =>
+        `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      const today = () => new Date().toISOString().slice(0, 10);
+      const fmt = (d) =>
+        d ? new Date(d + "T12:00:00").toLocaleDateString() : "";
+      const escapeHtml = (s) =>
+        String(s ?? "").replace(
+          /[&<>'"]/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              "'": "&#39;",
+              '"': "&quot;",
+            })[c],
+        );
+      const tags = (s) =>
+        String(s || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
+      const escapeRegExp = (s) =>
+        String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const mdCell = (s) =>
+        String(s ?? "")
+          .replace(/\|/g, "\\|")
+          .replace(/\n/g, "<br>");
+      const isClosedFailureStatus = (status) =>
+        CLOSED_FAILURE_STATUSES.includes(status);
+      const entriesForProject = (id) =>
+        state.entries
+          .filter((e) => e.projectId === id)
+          .sort(
+            (a, b) =>
+              String(b.date).localeCompare(String(a.date)) ||
+              String(b.updatedAt || "").localeCompare(
+                String(a.updatedAt || ""),
+              ),
+          );
+      function toast(msg = "Saved") {
+        const t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 1600);
+      }
+      function autosave(reason = "saved") {
+        clearTimeout(saveTimer);
+        $("autosaveState").textContent = "autosaving…";
+        saveTimer = setTimeout(() => {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          $("autosaveState").textContent =
+            `${reason} · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        }, 180);
+      }
+      function migrate(obj) {
+        obj = obj || {};
+        return {
+          projects: (obj.projects || []).map((p) => ({
+            owner: "",
+            targetDate: "",
+            ...p,
+          })),
+          entries: (obj.entries || []).map((e) => ({ attachments: [], ...e })),
+          selectedProjectId:
+            obj.selectedProjectId || obj.projects?.[0]?.id || null,
+          view: obj.view || "notebook",
+          activeTab: obj.activeTab || "All",
+        };
+      }
+      function loadState() {
+        document.body.dataset.theme =
+          localStorage.getItem(THEME_KEY) || "light";
+        try {
+          const raw =
+            localStorage.getItem(STORAGE_KEY) ||
+            localStorage.getItem(OLD_STORAGE_KEY);
+          if (raw) state = migrate(JSON.parse(raw));
+        } catch (e) {
+          console.warn(e);
+        }
+        populateSelects();
+        render();
+        initSketch();
+      }
+      function populateSelects() {
+        const statusOpts =
+          '<option value="All">All statuses</option>' +
+          projectStatuses.map((s) => `<option>${s}</option>`).join("");
+        $("statusFilter").innerHTML = statusOpts;
+        $("projectStatus").innerHTML = projectStatuses
+          .map((s) => `<option>${s}</option>`)
+          .join("");
+        $("entryType").innerHTML = entryTypes
+          .map((s) => `<option>${s}</option>`)
+          .join("");
+        $("entryStatus").innerHTML = entryStatuses
+          .map((s) => `<option>${s}</option>`)
+          .join("");
+      }
+      function projectStats(p) {
+        const es = entriesForProject(p.id);
+        const failures = es.filter((e) => e.type === "Failure Report");
+        const open = failures.filter((e) => !isClosedFailureStatus(e.status));
+        const tests = es.filter((e) => e.type === "Test Note");
+        const pass = tests.filter((e) => e.status === "Passed").length;
+        const repairs = es.filter((e) => e.type === "Repair Log").length;
+        const lessons = es.filter((e) => e.type === "Lesson Learned").length;
+        let health =
+          65 +
+          pass * 6 +
+          repairs * 3 +
+          lessons * 2 -
+          open.length * 15 -
+          failures.filter((f) => f.failureSeverity === "Critical").length * 18;
+        health = Math.max(0, Math.min(100, health));
+        return {
+          entries: es.length,
+          failures: failures.length,
+          open: open.length,
+          tests: tests.length,
+          pass,
+          repairs,
+          lessons,
+          health,
+        };
+      }
+      function filteredProjects() {
+        const q = $("searchInput")?.value.toLowerCase().trim() || "";
+        const st = $("statusFilter")?.value || "All";
+        let ps = state.projects.filter((p) => {
+          if (st !== "All" && p.status !== st) return false;
+          if (!q) return true;
+          const es = entriesForProject(p.id);
+          const blob = [
+            p.name,
+            p.description,
+            p.status,
+            p.revision,
+            p.nextAction,
+            p.owner,
+            ...(p.tags || []),
+            ...es.flatMap((e) => [
+              e.title,
+              e.body,
+              e.type,
+              e.status,
+              e.revision,
+              ...(e.tags || []),
+            ]),
+          ]
+            .join(" ")
+            .toLowerCase();
+          return blob.includes(q);
+        });
+        const sort = $("sortSelect")?.value || "updated";
+        ps.sort((a, b) =>
+          sort === "name"
+            ? a.name.localeCompare(b.name)
+            : sort === "health"
+              ? projectStats(b).health - projectStats(a).health
+              : sort === "failures"
+                ? projectStats(b).open - projectStats(a).open
+                : String(b.updatedAt || "").localeCompare(
+                    String(a.updatedAt || ""),
+                  ),
+        );
+        return ps;
+      }
+      function render() {
+        if (!state.selectedProjectId && state.projects[0])
+          state.selectedProjectId = state.projects[0].id;
+        renderProjects();
+        renderWorkspace();
+      }
+      function renderProjects() {
+        const list = $("projectList");
+        const ps = filteredProjects();
+        if (!ps.length) {
+          list.innerHTML =
+            '<div class="empty">No projects yet. Load sample data or start a fresh notebook.</div>';
+          return;
+        }
+        list.innerHTML = ps
+          .map((p, i) => {
+            const s = projectStats(p);
+            return `<article class="project-card ${p.id === state.selectedProjectId ? "active" : ""}" style="--tilt:${[-1.1, 0.7, -0.4, 1][i % 4]}deg" onclick="selectProject('${p.id}')"><h3>${escapeHtml(p.name)}</h3><div class="pill">${escapeHtml(p.status)} · ${escapeHtml(p.revision || "no rev")}</div><p style="color:var(--muted);margin:.65rem 0 0;line-height:1.35">${escapeHtml(p.description || "").slice(0, 135)}</p><div class="healthbar" title="Project health ${s.health}%"><span style="--w:${s.health}%"></span></div><div class="meta"><span class="pill">${s.entries} entries</span><span class="pill">${s.open} open failures</span><span class="pill">${s.health}% health</span></div></article>`;
+          })
+          .join("");
+      }
+      window.selectProject = (id) => {
+        state.selectedProjectId = id;
+        autosave("project selected");
+        render();
+      };
+      function renderWorkspace() {
+        const p = state.projects.find((x) => x.id === state.selectedProjectId);
+        if (!p) {
+          $("workspace").innerHTML =
+            '<div class="empty" style="margin:18px">No project selected. Create a project to begin the notebook.</div>';
+          return;
+        }
+        const s = projectStats(p);
+        $("workspace").innerHTML =
+          `<section class="hero"><div><div class="pill">${escapeHtml(p.status)} · ${escapeHtml(p.revision || "no revision")} · ${escapeHtml(p.owner || "unassigned")}</div><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.description || "")}</p><div class="stats"><div class="stat"><strong>${s.health}%</strong><span>health</span></div><div class="stat"><strong>${s.entries}</strong><span>entries</span></div><div class="stat"><strong>${s.open}</strong><span>open failures</span></div><div class="stat"><strong>${s.tests}</strong><span>tests</span></div><div class="stat"><strong>${s.repairs}</strong><span>repairs</span></div><div class="stat"><strong>${s.lessons}</strong><span>lessons</span></div></div></div><div class="hero-actions"><button class="primary" onclick="openEntryModal(null,'${p.id}')">+ Entry</button><button onclick="openEntryModal(null,'${p.id}','Test Note')">Test Note</button><button onclick="openEntryModal(null,'${p.id}','Failure Report')">Failure</button><button onclick="openEntryModal(null,'${p.id}','Calculation')">Calculation</button><button onclick="openProjectModal('${p.id}')">Edit Project</button></div></section><div class="main-grid"><section><div class="view-tabs">${["notebook", "testbench", "failures", "revisions", "calculators", "reports"].map((v) => `<button class="tab ${state.view === v ? "active" : ""}" onclick="setView('${v}')">${labelView(v)}</button>`).join("")}</div><div id="viewBody">${renderView(p)}</div></section><aside class="side-stack">${renderSide(p)}</aside></div><div class="footer-note">Engineering Notebook | M.B. Parks, Green Shoe Garage (c) 2026. Local-first single-file app.</div>`;
+      }
+      function labelView(v) {
+        return {
+          notebook: "Notebook",
+          testbench: "Test Bench",
+          failures: "Failure Garden",
+          revisions: "Revisions",
+          calculators: "Calculators",
+          reports: "Reports",
+        }[v];
+      }
+      window.setView = (v) => {
+        state.view = v;
+        autosave("view changed");
+        renderWorkspace();
+      };
+      function tabMatch(e, tab) {
+        if (tab === "All") return true;
+        if (tab === "Design")
+          return [
+            "Idea",
+            "Design Note",
+            "Decision Record",
+            "Revision Note",
+          ].includes(e.type);
+        if (tab === "Test") return e.type === "Test Note";
+        if (tab === "Failures") return e.type === "Failure Report";
+        if (tab === "Repairs") return e.type === "Repair Log";
+        if (tab === "Lessons") return e.type === "Lesson Learned";
+        if (tab === "Calculations") return e.type === "Calculation";
+        return true;
+      }
+      function renderView(p) {
+        if (state.view === "testbench") return renderTestBench(p);
+        if (state.view === "failures") return renderFailureGarden(p);
+        if (state.view === "revisions") return renderRevisions(p);
+        if (state.view === "calculators") return renderCalculators(p);
+        if (state.view === "reports") return renderReports(p);
+        return renderNotebook(p);
+      }
+      function renderNotebook(p) {
+        const tabs = [
+          "All",
+          "Design",
+          "Test",
+          "Failures",
+          "Repairs",
+          "Lessons",
+          "Calculations",
+        ];
+        const es = entriesForProject(p.id).filter((e) =>
+          tabMatch(e, state.activeTab),
+        );
+        return `<div class="nav-tabs">${tabs.map((t) => `<button class="tab ${state.activeTab === t ? "active" : ""}" onclick="setEntryTab('${t}')">${t}</button>`).join("")}</div><div class="entry-list">${es.length ? es.map(renderEntryCard).join("") : '<div class="empty">This notebook page is blank. Add a note, test, calculation, failure, repair, or lesson.</div>'}</div>`;
+      }
+      window.setEntryTab = (t) => {
+        state.activeTab = t;
+        autosave("tab changed");
+        renderWorkspace();
+      };
+      function renderEntryCard(e) {
+        let stamp = "";
+        if (e.status === "Passed")
+          stamp = '<span class="stamp pass">PASS</span>';
+        if (e.status === "Failed" || e.status === "Open")
+          stamp = '<span class="stamp fail">FAIL</span>';
+        if (e.status === "Needs Retest" || e.status === "Investigating")
+          stamp = '<span class="stamp warn">RETEST</span>';
+        return `<article class="entry-card" style="--entry-color:${typeColors[e.type] || "var(--accent)"}"><div class="entry-header"><div><div class="meta"><span class="pill">${fmt(e.date)}</span><span class="pill">${escapeHtml(e.type)}</span><span class="pill">${escapeHtml(e.status)}</span><span class="pill">${escapeHtml(e.revision || "no rev")}</span>${stamp}</div><h3>${escapeHtml(e.title)}</h3></div><div class="entry-actions"><button class="small" onclick="openEntryModal('${e.id}')">Edit</button><button class="small" onclick="duplicateEntry('${e.id}')">Duplicate</button></div></div><div class="entry-body">${escapeHtml(e.body || "")}</div>${renderStructured(e)}${(e.attachments || []).length ? `<div class="meta">${e.attachments.map((a) => `<span class="pill">📎 ${escapeHtml(a.name)}</span>`).join("")}</div>` : ""}</article>`;
+      }
+      function renderStructured(e) {
+        let out = "";
+        if (e.type === "Test Note")
+          out += `<div class="mini-card"><b>Objective:</b> ${escapeHtml(e.testObjective || "")}<br><b>Expected:</b> ${escapeHtml(e.expectedResult || "")}<br><b>Actual:</b> ${escapeHtml(e.actualResult || "")}</div>`;
+        if (e.type === "Failure Report")
+          out += `<div class="mini-card"><b>Severity:</b> ${escapeHtml(e.failureSeverity || "")} · <b>Subsystem:</b> ${escapeHtml(e.affectedSubsystem || "")}<br><b>Symptoms:</b> ${escapeHtml(e.failureSymptoms || "")}<br><b>Action:</b> ${escapeHtml(e.correctiveAction || "")}</div>`;
+        if ((e.measurements || []).length)
+          out += `<div class="mini-card"><b>Measurements</b><br>${e.measurements.map((m) => `${escapeHtml(m.name)}: ${escapeHtml(m.value)} ${escapeHtml(m.unit)} ${m.note ? "— " + escapeHtml(m.note) : ""}`).join("<br>")}</div>`;
+        if (e.calcResult)
+          out += `<div class="calc-result">${escapeHtml(e.calcResult)}</div>`;
+        return out;
+      }
+      function renderSide(p) {
+        const es = entriesForProject(p.id);
+        const next = escapeHtml(p.nextAction || "No next action recorded.");
+        return `<div class="mini-card"><h3>Next Action</h3><p>${next}</p></div><div class="mini-card"><h3>Object Memory</h3><div class="timeline">${
+          es
+            .slice(0, 8)
+            .map(
+              (e) =>
+                `<div class="timeline-item"><b>${escapeHtml(e.type)}</b><br><span style="color:var(--muted)">${fmt(e.date)} · ${escapeHtml(e.title)}</span></div>`,
+            )
+            .join("") || "<p>No entries yet.</p>"
+        }</div></div><div class="mini-card"><h3>Tags</h3><div class="meta">${[...new Set([...(p.tags || []), ...es.flatMap((e) => e.tags || [])])].map((t) => `<span class="pill">${escapeHtml(t)}</span>`).join("") || '<span class="pill">none</span>'}</div></div>`;
+      }
+      function renderTestBench(p) {
+        const tests = entriesForProject(p.id).filter(
+          (e) => e.type === "Test Note",
+        );
+        return `<div class="report-box"><h3>Bench Mode</h3><p>Use this when you are standing at the bench and need fast test logging.</p><div class="hero-actions" style="justify-content:flex-start"><button class="primary" onclick="openEntryModal(null,'${p.id}','Test Note')">Start Test Note</button><button onclick="openEntryModal(null,'${p.id}','Failure Report')">Log Failure</button><button onclick="openEntryModal(null,'${p.id}','Repair Log')">Log Repair</button></div></div><div class="entry-list">${tests.length ? tests.map(renderEntryCard).join("") : '<div class="empty">No tests yet. The object is waiting on the bench.</div>'}</div>`;
+      }
+      function renderFailureGarden(p) {
+        const fs = entriesForProject(p.id).filter(
+          (e) => e.type === "Failure Report",
+        );
+        return `<div class="garden">${fs.length ? fs.map((f) => `<div class="garden-card"><div class="garden-icon">${isClosedFailureStatus(f.status) ? "🌼" : f.failureSeverity === "Critical" ? "🍄" : "🌵"}</div><h3>${escapeHtml(f.title)}</h3><p>${escapeHtml(f.failureSeverity || "")} · ${escapeHtml(f.status)}</p><p>${escapeHtml(f.affectedSubsystem || "")}</p><button class="small" onclick="openEntryModal('${f.id}')">Open</button></div>`).join("") : '<div class="empty">No failures yet. Either it is excellent, or it has not been tested hard enough.</div>'}</div>`;
+      }
+      function renderRevisions(p) {
+        const es = entriesForProject(p.id);
+        const revs = [...new Set(es.map((e) => e.revision || "No revision"))];
+        return `<div class="report-box"><h3>Revision Compare</h3><p>Pick two revisions mentally from the columns below. Each column groups entries by revision so design intent, tests, failures, and repairs stay connected.</p></div><div class="compare">${revs
+          .slice(0, 2)
+          .map(
+            (r) =>
+              `<div class="report-box"><h3>${escapeHtml(r)}</h3>${es
+                .filter((e) => (e.revision || "No revision") === r)
+                .map(
+                  (e) =>
+                    `<p><b>${escapeHtml(e.type)}</b><br>${escapeHtml(e.title)}<br><span style="color:var(--muted)">${escapeHtml(e.status)}</span></p>`,
+                )
+                .join("")}</div>`,
+          )
+          .join(
+            "",
+          )}${revs.length === 1 ? '<div class="report-box"><h3>Another revision</h3><p>Add entries under Rev B or Prototype 2 to compare change history.</p></div>' : ""}</div><div class="report-box"><h3>All Revisions</h3><div class="meta">${revs.map((r) => `<span class="pill">${escapeHtml(r)} · ${es.filter((e) => (e.revision || "No revision") === r).length}</span>`).join("")}</div></div>`;
+      }
+      const calcDefs = {
+        ohm: {
+          name: "Ohm / Power",
+          fields: [
+            ["V", "Voltage", "12"],
+            ["R", "Resistance Ω", "220"],
+          ],
+          formula: (v) => ({ I: v.V / v.R, P: v.V * (v.V / v.R) }),
+        },
+        divider: {
+          name: "Voltage Divider",
+          fields: [
+            ["Vin", "Input V", "12"],
+            ["R1", "R1 Ω", "10000"],
+            ["R2", "R2 Ω", "4700"],
+          ],
+          formula: (v) => ({ Vout: (v.Vin * v.R2) / (v.R1 + v.R2) }),
+        },
+        led: {
+          name: "LED Resistor",
+          fields: [
+            ["Vs", "Supply V", "5"],
+            ["Vf", "LED Vf", "2"],
+            ["I", "LED current A", "0.02"],
+          ],
+          formula: (v) => ({ R: (v.Vs - v.Vf) / v.I, P: (v.Vs - v.Vf) * v.I }),
+        },
+        battery: {
+          name: "Battery Runtime",
+          fields: [
+            ["Ah", "Capacity Ah", "6"],
+            ["I", "Load A", "1.2"],
+            ["eff", "Efficiency", "0.85"],
+          ],
+          formula: (v) => ({ Runtime_hours: (v.Ah / v.I) * v.eff }),
+        },
+        gear: {
+          name: "Gear Ratio",
+          fields: [
+            ["driver", "Driver teeth", "20"],
+            ["driven", "Driven teeth", "60"],
+            ["rpm", "Input RPM", "300"],
+          ],
+          formula: (v) => ({
+            ratio: v.driven / v.driver,
+            output_rpm: v.rpm / (v.driven / v.driver),
+          }),
+        },
+        torque: {
+          name: "Torque",
+          fields: [
+            ["F", "Force N", "50"],
+            ["r", "Lever arm m", "0.2"],
+          ],
+          formula: (v) => ({ Torque_Nm: v.F * v.r }),
+        },
+        speed: {
+          name: "Speed / Distance / Time",
+          fields: [
+            ["distance", "Distance m", "10"],
+            ["time", "Time s", "2"],
+          ],
+          formula: (v) => ({ speed_m_s: v.distance / v.time }),
+        },
+        cost: {
+          name: "Material Cost",
+          fields: [
+            ["qty", "Quantity", "4"],
+            ["unit", "Unit cost", "2.5"],
+            ["scrap", "Scrap factor", "1.15"],
+          ],
+          formula: (v) => ({ cost: v.qty * v.unit * v.scrap }),
+        },
+        print: {
+          name: "3D Print Allowance",
+          fields: [
+            ["nominal", "Nominal mm", "100"],
+            ["shrink", "Shrink %", "0.6"],
+          ],
+          formula: (v) => ({ modeled_mm: v.nominal * (1 + v.shrink / 100) }),
+        },
+      };
+      function renderCalculators(p) {
+        return `<div class="report-box"><h3>Calculator Library</h3><p>Run a quick engineering helper, then save the result into this project as a Calculation entry.</p></div>${Object.entries(
+          calcDefs,
+        )
+          .map(
+            ([k, c]) =>
+              `<div class="calculator-box"><h3>${c.name}</h3><div class="calc-grid">${c.fields.map((f) => `<label><span>${f[1]}</span><input data-calc="${k}" data-var="${f[0]}" value="${f[2]}"></label>`).join("")}</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="primary small" onclick="runLibraryCalc('${k}')">Run</button><button class="small" onclick="saveLibraryCalc('${k}','${p.id}')">Save to Notebook</button></div><div class="calc-result" id="libcalc-${k}">Not run yet.</div></div>`,
+          )
+          .join("")}`;
+      }
+      window.runLibraryCalc = (k) => {
+        const c = calcDefs[k];
+        const vals = {};
+        document
+          .querySelectorAll(`[data-calc="${k}"]`)
+          .forEach((i) => (vals[i.dataset.var] = Number(i.value) || 0));
+        const res = c.formula(vals);
+        $("libcalc-" + k).textContent = Object.entries({ ...vals, ...res })
+          .map(
+            ([a, b]) =>
+              `${a} = ${Number.isFinite(b) ? Number(b.toFixed(5)) : b}`,
+          )
+          .join("\n");
+        return $("libcalc-" + k).textContent;
+      };
+      window.saveLibraryCalc = (k, pid) => {
+        const result = runLibraryCalc(k);
+        state.entries.push({
+          id: uid("entry"),
+          projectId: pid,
+          type: "Calculation",
+          title: calcDefs[k].name + " calculation",
+          date: today(),
+          revision: state.projects.find((p) => p.id === pid)?.revision || "",
+          status: "Draft",
+          tags: ["calculator", k],
+          body: "Saved from calculator library.",
+          measurements: [],
+          calcRows: [],
+          calcResult: result,
+          attachments: [],
+          relatedEntryIds: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        autosave("calculation saved");
+        render();
+        toast("Calculation saved");
+      };
+      function renderReports(p) {
+        const es = entriesForProject(p.id);
+        const open = es.filter(
+          (e) =>
+            e.type === "Failure Report" && !isClosedFailureStatus(e.status),
+        );
+        const tests = es.filter((e) => e.type === "Test Note");
+        return `<div class="report-box"><h3>Project Report</h3><p><b>Status:</b> ${escapeHtml(p.status)}<br><b>Revision:</b> ${escapeHtml(p.revision || "")}<br><b>Next action:</b> ${escapeHtml(p.nextAction || "")}</p><p>${escapeHtml(p.description || "")}</p></div><div class="report-box"><h3>Open Issues</h3>${open.length ? open.map((e) => `<p><b>${escapeHtml(e.title)}</b><br>${escapeHtml(e.failureSeverity || "")} · ${escapeHtml(e.affectedSubsystem || "")} · ${escapeHtml(e.status)}</p>`).join("") : "<p>No open failures.</p>"}</div><div class="report-box"><h3>Test Summary</h3>${tests.length ? tests.map((e) => `<p><b>${escapeHtml(e.title)}</b><br>${fmt(e.date)} · ${escapeHtml(e.status)} · ${escapeHtml(e.actualResult || "")}</p>`).join("") : "<p>No tests recorded.</p>"}</div>`;
+      }
+      window.openProjectModal = function (id = null) {
+        const p = state.projects.find((x) => x.id === id);
+        $("projectModalTitle").textContent = p ? "Edit Project" : "New Project";
+        $("projectId").value = p?.id || "";
+        $("projectName").value = p?.name || "";
+        $("projectStatus").value = p?.status || "Concept";
+        $("projectRevision").value = p?.revision || "";
+        $("projectOwner").value = p?.owner || "";
+        $("projectTarget").value = p?.targetDate || "";
+        $("projectTags").value = (p?.tags || []).join(", ");
+        $("projectDescription").value = p?.description || "";
+        $("projectNextAction").value = p?.nextAction || "";
+        $("deleteProjectBtn").classList.toggle("hidden", !p);
+        openModal("projectModal");
+      };
+      window.openEntryModal = function (
+        id = null,
+        projectId = state.selectedProjectId,
+        forcedType = null,
+      ) {
+        const e = state.entries.find((x) => x.id === id);
+        currentAttachments = structuredClone(e?.attachments || []);
+        $("entryModalTitle").textContent = e ? "Edit Entry" : "New Entry";
+        $("entryId").value = e?.id || "";
+        $("entryProjectId").innerHTML = state.projects
+          .map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`)
+          .join("");
+        $("entryProjectId").value = e?.projectId || projectId;
+        $("entryType").value = forcedType || e?.type || "Idea";
+        $("entryTitle").value = e?.title || "";
+        $("entryDate").value = e?.date || today();
+        $("entryRevision").value =
+          e?.revision ||
+          state.projects.find((p) => p.id === $("entryProjectId").value)
+            ?.revision ||
+          "";
+        $("entryStatus").value =
+          e?.status || defaultStatusForType($("entryType").value);
+        $("entryTags").value = (e?.tags || []).join(", ");
+        $("entryBody").value = e?.body || "";
+        $("testObjective").value = e?.testObjective || "";
+        $("testSetup").value = e?.testSetup || "";
+        $("expectedResult").value = e?.expectedResult || "";
+        $("actualResult").value = e?.actualResult || "";
+        $("testEquipment").value = e?.testEquipment || "";
+        $("testEnvironment").value = e?.testEnvironment || "";
+        $("failureSeverity").value = e?.failureSeverity || "Low";
+        $("affectedSubsystem").value = e?.affectedSubsystem || "";
+        $("failureSymptoms").value = e?.failureSymptoms || "";
+        $("suspectedCause").value = e?.suspectedCause || "";
+        $("confirmedCause").value = e?.confirmedCause || "";
+        $("correctiveAction").value = e?.correctiveAction || "";
+        renderMeasurementRows(e?.measurements || []);
+        renderCalcRows(e?.calcRows || []);
+        $("calcResult").textContent =
+          e?.calcResult || "No calculation run yet.";
+        renderAttachments();
+        populateRelated(e);
+        updateEntryConditionalFields();
+        clearSketch();
+        $("deleteEntryBtn").classList.toggle("hidden", !e);
+        openModal("entryModal");
+      };
+      function defaultStatusForType(type) {
+        return type === "Failure Report"
+          ? "Open"
+          : type === "Test Note"
+            ? "Tested"
+            : type === "Repair Log"
+              ? "Repaired"
+              : "Draft";
+      }
+      function populateRelated(e) {
+        const projectId = $("entryProjectId").value;
+        const opts = state.entries
+          .filter((x) => x.projectId === projectId && x.id !== e?.id)
+          .map(
+            (x) =>
+              `<option value="${x.id}" ${(e?.relatedEntryIds || []).includes(x.id) ? "selected" : ""}>${escapeHtml(x.date)} · ${escapeHtml(x.type)} · ${escapeHtml(x.title)}</option>`,
+          )
+          .join("");
+        $("entryRelated").innerHTML = opts;
+      }
+      function updateEntryConditionalFields() {
+        const type = $("entryType").value;
+        $("testFields").classList.toggle("hidden", type !== "Test Note");
+        $("failureFields").classList.toggle(
+          "hidden",
+          type !== "Failure Report",
+        );
+        $("calcSection").classList.toggle("hidden", type !== "Calculation");
+        if (!$("entryId").value)
+          $("entryStatus").value = defaultStatusForType(type);
+      }
+      function openModal(id) {
+        $(id).classList.add("open");
+        setTimeout(
+          () => $(id).querySelector("input,select,textarea,button")?.focus(),
+          20,
+        );
+      }
+      function closeModal(id) {
+        $(id).classList.remove("open");
+      }
+      function measureRowHtml(r = {}) {
+        return `<div class="measure-row" data-measure-row><input placeholder="Measurement" value="${escapeHtml(r.name || "")}"><input placeholder="Value" value="${escapeHtml(r.value || "")}"><input placeholder="Unit" value="${escapeHtml(r.unit || "")}"><input placeholder="Note" value="${escapeHtml(r.note || "")}"><button type="button" class="small danger" onclick="this.closest('[data-measure-row]').remove()">×</button></div>`;
+      }
+      function renderMeasurementRows(rows) {
+        $("measurementRows").innerHTML = rows.length
+          ? rows.map(measureRowHtml).join("")
+          : '<div class="empty">No measurements yet.</div>';
+      }
+      function readMeasurementRows() {
+        return [...document.querySelectorAll("[data-measure-row]")]
+          .map((row) => {
+            const i = row.querySelectorAll("input");
+            return {
+              name: i[0].value.trim(),
+              value: i[1].value.trim(),
+              unit: i[2].value.trim(),
+              note: i[3].value.trim(),
+            };
+          })
+          .filter((r) => r.name || r.value || r.note);
+      }
+      function calcRowHtml(r = {}) {
+        return `<div class="calc-row" data-calc-row><input placeholder="Variable" value="${escapeHtml(r.name || "")}"><input placeholder="Value or formula" value="${escapeHtml(r.value || "")}"><input placeholder="Unit" value="${escapeHtml(r.unit || "")}"><input placeholder="Description" value="${escapeHtml(r.note || "")}"><button type="button" class="small danger" onclick="this.closest('[data-calc-row]').remove()">×</button></div>`;
+      }
+      function renderCalcRows(rows) {
+        $("calcRows").innerHTML = rows.length
+          ? rows.map(calcRowHtml).join("")
+          : '<div class="empty">No variables yet.</div>';
+      }
+      function readCalcRows() {
+        return [...document.querySelectorAll("[data-calc-row]")]
+          .map((row) => {
+            const i = row.querySelectorAll("input");
+            return {
+              name: i[0].value.trim(),
+              value: i[1].value.trim(),
+              unit: i[2].value.trim(),
+              note: i[3].value.trim(),
+            };
+          })
+          .filter((r) => r.name || r.value);
+      }
+      function runCalculation() {
+        const rows = readCalcRows();
+        const vars = {};
+        const lines = [];
+        for (const r of rows) {
+          if (!r.name) continue;
+          let expr = String(r.value || "0").replace(
+            /[^-+*/(). 0-9A-Za-z_]/g,
+            "",
+          );
+          for (const [k, v] of Object.entries(vars))
+            expr = expr.replace(
+              new RegExp("\\b" + escapeRegExp(k) + "\\b", "g"),
+              `(${v})`,
+            );
+          let val = Number(r.value);
+          if (!Number.isFinite(val)) {
+            try {
+              val = Function(`"use strict"; return (${expr})`)();
+            } catch (e) {
+              val = NaN;
+            }
+          }
+          vars[r.name] = val;
+          lines.push(
+            `${r.name} = ${Number.isFinite(val) ? Number(val.toFixed(6)) : "ERR"} ${r.unit || ""}${r.note ? " // " + r.note : ""}`,
+          );
+        }
+        $("calcResult").textContent =
+          lines.join("\n") || "No valid calculation rows.";
+      }
+      function renderAttachments() {
+        if (!currentAttachments.length) {
+          $("attachmentRows").innerHTML =
+            '<div class="empty">No attachments. Add a photo, text note, CSV, JSON, Markdown, or sketch.</div>';
+          return;
+        }
+        $("attachmentRows").innerHTML = currentAttachments
+          .map(
+            (a, i) =>
+              `<div class="attachment-row"><span class="pill">📎 ${escapeHtml(a.name)} · ${escapeHtml(a.type || "file")}</span><button type="button" class="small" onclick="previewAttachment(${i})">Preview</button><button type="button" class="small danger" onclick="removeAttachment(${i})">Remove</button></div><div id="attach-preview-${i}"></div>`,
+          )
+          .join("");
+      }
+      window.previewAttachment = (i) => {
+        const a = currentAttachments[i];
+        const box = $("attach-preview-" + i);
+        if (!a) return;
+        if ((a.type || "").startsWith("image/"))
+          box.innerHTML = `<img class="thumb" src="${a.data}" alt="${escapeHtml(a.name)}">`;
+        else
+          box.innerHTML = `<div class="calc-result">${escapeHtml((a.text || a.data || "").slice(0, 2000))}</div>`;
+      };
+      window.removeAttachment = (i) => {
+        currentAttachments.splice(i, 1);
+        renderAttachments();
+      };
+      function saveProjectFromForm(ev) {
+        ev.preventDefault();
+        const id = $("projectId").value || uid("project");
+        const now = new Date().toISOString();
+        const obj = {
+          id,
+          name: $("projectName").value.trim(),
+          status: $("projectStatus").value,
+          revision: $("projectRevision").value.trim(),
+          owner: $("projectOwner").value.trim(),
+          targetDate: $("projectTarget").value,
+          tags: tags($("projectTags").value),
+          description: $("projectDescription").value.trim(),
+          nextAction: $("projectNextAction").value.trim(),
+          createdAt: state.projects.find((p) => p.id === id)?.createdAt || now,
+          updatedAt: now,
+        };
+        const idx = state.projects.findIndex((p) => p.id === id);
+        if (idx >= 0) state.projects[idx] = obj;
+        else state.projects.push(obj);
+        state.selectedProjectId = id;
+        closeModal("projectModal");
+        autosave("project saved");
+        render();
+        toast("Project saved");
+      }
+      function saveEntryFromForm(ev) {
+        ev.preventDefault();
+        const id = $("entryId").value || uid("entry");
+        const now = new Date().toISOString();
+        const selected = [...$("entryRelated").selectedOptions].map(
+          (o) => o.value,
+        );
+        const existing = state.entries.find((e) => e.id === id);
+        const obj = {
+          id,
+          projectId: $("entryProjectId").value,
+          type: $("entryType").value,
+          title: $("entryTitle").value.trim(),
+          date: $("entryDate").value,
+          revision: $("entryRevision").value.trim(),
+          status: $("entryStatus").value,
+          tags: tags($("entryTags").value),
+          body: $("entryBody").value.trim(),
+          relatedEntryIds: selected,
+          measurements: readMeasurementRows(),
+          calcRows: readCalcRows(),
+          calcResult:
+            $("calcResult").textContent === "No calculation run yet."
+              ? ""
+              : $("calcResult").textContent,
+          attachments: currentAttachments,
+          testObjective: $("testObjective").value.trim(),
+          testSetup: $("testSetup").value.trim(),
+          expectedResult: $("expectedResult").value.trim(),
+          actualResult: $("actualResult").value.trim(),
+          testEquipment: $("testEquipment").value.trim(),
+          testEnvironment: $("testEnvironment").value.trim(),
+          failureSeverity: $("failureSeverity").value,
+          affectedSubsystem: $("affectedSubsystem").value.trim(),
+          failureSymptoms: $("failureSymptoms").value.trim(),
+          suspectedCause: $("suspectedCause").value.trim(),
+          confirmedCause: $("confirmedCause").value.trim(),
+          correctiveAction: $("correctiveAction").value.trim(),
+          createdAt: existing?.createdAt || now,
+          updatedAt: now,
+        };
+        const idx = state.entries.findIndex((e) => e.id === id);
+        if (idx >= 0) state.entries[idx] = obj;
+        else state.entries.push(obj);
+        state.selectedProjectId = obj.projectId;
+        closeModal("entryModal");
+        autosave("entry saved");
+        render();
+        toast("Entry saved");
+      }
+      window.duplicateEntry = (id) => {
+        const e = state.entries.find((x) => x.id === id);
+        if (!e) return;
+        const copy = structuredClone(e);
+        copy.id = uid("entry");
+        copy.title = e.title + " copy";
+        copy.createdAt = copy.updatedAt = new Date().toISOString();
+        state.entries.push(copy);
+        autosave("entry duplicated");
+        render();
+        toast("Entry duplicated");
+      };
+      function deleteProject() {
+        const id = $("projectId").value;
+        if (!id || !confirm("Delete this project and all of its entries?"))
+          return;
+        state.projects = state.projects.filter((p) => p.id !== id);
+        state.entries = state.entries.filter((e) => e.projectId !== id);
+        state.selectedProjectId = state.projects[0]?.id || null;
+        closeModal("projectModal");
+        autosave("project deleted");
+        render();
+        toast("Project deleted");
+      }
+      function deleteEntry() {
+        const id = $("entryId").value;
+        if (!id || !confirm("Delete this entry?")) return;
+        state.entries = state.entries.filter((e) => e.id !== id);
+        closeModal("entryModal");
+        autosave("entry deleted");
+        render();
+        toast("Entry deleted");
+      }
+      function sampleData() {
+        const now = new Date().toISOString();
+        const p = {
+          id: "project-fume-extractor",
+          name: "Portable Bench Fume Extractor",
+          status: "Prototype",
+          revision: "Rev C",
+          owner: "Green Shoe Garage",
+          targetDate: "2026-08-15",
+          tags: ["soldering", "airflow", "battery", "field-kit"],
+          description:
+            "Battery-powered soldering fume extractor for bench and field use. The sample demonstrates the full design → calculation → build → test → failure → repair → revision loop.",
+          nextAction:
+            "Run a 60-minute thermal test at full fan speed with the XT30 connector and revised strain relief installed.",
+          createdAt: now,
+          updatedAt: now,
+        };
+        const base = [
+          [
+            "Idea",
+            "Battery-powered soldering fume extractor",
+            "Concept for a compact extractor that can sit beside a repair bench or travel with a field kit.",
+            "Active",
+            "2026-07-01",
+            "Rev A",
+          ],
+          [
+            "Design Note",
+            "Requirements and constraints",
+            "12 V operation, replaceable carbon filter, printable housing, no proprietary consumables, under 1.5 kg, safe for continuous use.",
+            "Active",
+            "2026-07-01",
+            "Rev A",
+          ],
+          [
+            "Calculation",
+            "Fan power and battery runtime",
+            "Estimate whether a 6 Ah 12 V pack is enough for an afternoon of intermittent soldering.",
+            "Draft",
+            "2026-07-02",
+            "Rev A",
+          ],
+          [
+            "Build Log",
+            "Rev A housing assembled",
+            "Printed housing in PETG. Installed 120 mm fan, switch, fuse holder, barrel jack, and carbon filter frame. Wire routing is cramped.",
+            "Built",
+            "2026-07-02",
+            "Rev A",
+          ],
+          [
+            "Test Note",
+            "Airflow test with carbon filter installed",
+            "Filter caused a noticeable drop in airflow but still pulled smoke away from the solder joint at 15 cm.",
+            "Passed",
+            "2026-07-03",
+            "Rev A",
+          ],
+          [
+            "Failure Report",
+            "Barrel jack overheated during extended load",
+            "After 22 minutes at full fan speed, barrel jack was hot to the touch.",
+            "Open",
+            "2026-07-03",
+            "Rev A",
+          ],
+          [
+            "Repair Log",
+            "Replaced barrel jack with XT30 connector",
+            "Removed barrel jack, enlarged panel opening, installed XT30 pigtail, added heat shrink strain relief, and verified polarity.",
+            "Repaired",
+            "2026-07-03",
+            "Rev B",
+          ],
+          [
+            "Test Note",
+            "Retest after XT30 connector repair",
+            "Ran fan at full speed for 30 minutes. Connector remained cool. Housing temperature stable.",
+            "Passed",
+            "2026-07-03",
+            "Rev B",
+          ],
+          [
+            "Revision Note",
+            "Rev C strain relief update",
+            "Moved cable exit 12 mm lower and added printed clamp to prevent the power lead from flexing at the solder joint.",
+            "Active",
+            "2026-07-04",
+            "Rev C",
+          ],
+          [
+            "Lesson Learned",
+            "Avoid small barrel connectors for sustained current",
+            "Convenient connectors are not always good field connectors. Use connectors sized for sustained load and cable abuse.",
+            "Closed",
+            "2026-07-04",
+            "Rev C",
+          ],
+        ];
+        const entries = base.map((b, i) => ({
+          id: "sample-entry-" + (i + 1),
+          projectId: p.id,
+          type: b[0],
+          title: b[1],
+          body: b[2],
+          status: b[3],
+          date: b[4],
+          revision: b[5],
+          tags: [b[0].toLowerCase().replaceAll(" ", "-")],
+          measurements: [],
+          calcRows: [],
+          calcResult: "",
+          attachments: [],
+          relatedEntryIds: [],
+          createdAt: now,
+          updatedAt: now,
+        }));
+        entries[2].calcRows = [
+          { name: "V", value: "12", unit: "V", note: "battery voltage" },
+          { name: "I", value: "1.2", unit: "A", note: "fan current" },
+          { name: "P", value: "V*I", unit: "W", note: "fan power" },
+          { name: "Ah", value: "6", unit: "Ah", note: "battery capacity" },
+          {
+            name: "Runtime",
+            value: "Ah/I",
+            unit: "hours",
+            note: "ideal runtime",
+          },
+        ];
+        entries[2].calcResult =
+          "V = 12 V // battery voltage\nI = 1.2 A // fan current\nP = 14.4 W // fan power\nAh = 6 Ah // battery capacity\nRuntime = 5 hours // ideal runtime";
+        entries[4].testObjective =
+          "Verify useful smoke capture with filter installed.";
+        entries[4].testSetup =
+          "Fan at full speed, carbon filter installed, smoke source 15 cm from intake.";
+        entries[4].expectedResult = "Visible smoke drawn into filter.";
+        entries[4].actualResult = "Pass at 15 cm, weak beyond 22 cm.";
+        entries[4].testEquipment = "Smoke source, phone sound meter, ruler";
+        entries[4].measurements = [
+          {
+            name: "Capture distance",
+            value: "15",
+            unit: "cm",
+            note: "reliable smoke pull",
+          },
+          {
+            name: "Noise",
+            value: "48",
+            unit: "dBA",
+            note: "phone app estimate",
+          },
+        ];
+        entries[5].failureSeverity = "Medium";
+        entries[5].affectedSubsystem = "Power input";
+        entries[5].failureSymptoms =
+          "Connector hot after extended fan operation.";
+        entries[5].suspectedCause =
+          "Barrel jack contact resistance under sustained current.";
+        entries[5].confirmedCause = "High contact resistance at barrel jack.";
+        entries[5].correctiveAction = "Replace with XT30 connector and retest.";
+        entries[7].testObjective =
+          "Confirm connector repair holds under sustained load.";
+        entries[7].testSetup = "XT30 installed, full fan speed, 30 minute run.";
+        entries[7].expectedResult = "Connector stays cool.";
+        entries[7].actualResult =
+          "Pass. No meaningful temperature rise at connector.";
+        entries[7].measurements = [
+          { name: "Run time", value: "30", unit: "min", note: "continuous" },
+          {
+            name: "Connector temp",
+            value: "28",
+            unit: "°C",
+            note: "near ambient",
+          },
+        ];
+        state = {
+          projects: [p],
+          entries,
+          selectedProjectId: p.id,
+          view: "notebook",
+          activeTab: "All",
+        };
+        autosave("sample loaded");
+        render();
+        toast("Sample data loaded");
+      }
+      function exportJson() {
+        download(
+          `engineering-notebook-${today()}.json`,
+          JSON.stringify(
+            {
+              version: VERSION,
+              exportedAt: new Date().toISOString(),
+              ...state,
+            },
+            null,
+            2,
+          ),
+          "application/json",
+        );
+      }
+      function exportMarkdown() {
+        const lines = [
+          `# FI-058: Engineering Notebook Export`,
+          ``,
+          `Version: ${VERSION}`,
+          `Exported: ${new Date().toLocaleString()}`,
+          ``,
+        ];
+        for (const p of state.projects) {
+          lines.push(
+            `## ${p.name}`,
+            ``,
+            `Status: ${p.status}  `,
+            `Revision: ${p.revision || ""}  `,
+            `Owner: ${p.owner || ""}  `,
+            `Tags: ${(p.tags || []).join(", ")}`,
+            ``,
+            p.description || "",
+            ``,
+            `Next action: ${p.nextAction || ""}`,
+            ``,
+          );
+          for (const e of entriesForProject(p.id).reverse()) {
+            lines.push(
+              `### ${e.date} · ${e.type} · ${e.title}`,
+              ``,
+              `Status: ${e.status}  `,
+              `Revision: ${e.revision || ""}  `,
+              `Tags: ${(e.tags || []).join(", ")}`,
+              ``,
+              e.body || "",
+            );
+            if ((e.measurements || []).length)
+              lines.push(
+                "",
+                `| Measurement | Value | Unit | Note |`,
+                `|---|---:|---|---|`,
+                ...e.measurements.map(
+                  (m) =>
+                    `| ${mdCell(m.name)} | ${mdCell(m.value)} | ${mdCell(m.unit)} | ${mdCell(m.note)} |`,
+                ),
+              );
+            if (e.calcResult) lines.push("", "```", e.calcResult, "```");
+            lines.push("");
+          }
+        }
+        download(
+          `engineering-notebook-${today()}.md`,
+          lines.join("\n"),
+          "text/markdown",
+        );
+      }
+      function exportCsv() {
+        const rows = [
+          [
+            "Project",
+            "Date",
+            "Revision",
+            "Title",
+            "Severity",
+            "Status",
+            "Subsystem",
+            "Symptoms",
+            "Suspected Cause",
+            "Confirmed Cause",
+            "Corrective Action",
+          ],
+        ];
+        state.entries
+          .filter((e) => e.type === "Failure Report")
+          .forEach((e) => {
+            const p = state.projects.find((p) => p.id === e.projectId);
+            rows.push([
+              p?.name || "",
+              e.date,
+              e.revision,
+              e.title,
+              e.failureSeverity,
+              e.status,
+              e.affectedSubsystem,
+              e.failureSymptoms,
+              e.suspectedCause,
+              e.confirmedCause,
+              e.correctiveAction,
+            ]);
+          });
+        download(
+          `engineering-notebook-failures-${today()}.csv`,
+          rows
+            .map((r) =>
+              r
+                .map((v) => `"${String(v || "").replaceAll('"', '""')}"`)
+                .join(","),
+            )
+            .join("\n"),
+          "text/csv",
+        );
+      }
+      function download(filename, text, type) {
+        const blob = new Blob([text], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      }
+      function importJson(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+            if (!Array.isArray(data.projects) || !Array.isArray(data.entries))
+              throw new Error("Missing projects or entries arrays.");
+            state = migrate(data);
+            autosave("imported");
+            render();
+            toast("JSON imported");
+          } catch (err) {
+            alert("Import failed: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+      function initSketch() {
+        const c = $("sketchCanvas");
+        if (!c) return;
+        const ctx = c.getContext("2d");
+        let drawing = false;
+        function pos(ev) {
+          const r = c.getBoundingClientRect();
+          const t = ev.touches?.[0] || ev;
+          return {
+            x: ((t.clientX - r.left) * c.width) / r.width,
+            y: ((t.clientY - r.top) * c.height) / r.height,
+          };
+        }
+        function start(ev) {
+          drawing = true;
+          const p = pos(ev);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ev.preventDefault();
+        }
+        function move(ev) {
+          if (!drawing) return;
+          const p = pos(ev);
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "#1b1b1b";
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          ev.preventDefault();
+        }
+        function end() {
+          drawing = false;
+        }
+        c.addEventListener("pointerdown", start);
+        c.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", end);
+        clearSketch();
+      }
+      function clearSketch() {
+        const c = $("sketchCanvas");
+        if (!c) return;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.strokeStyle = "rgba(47,114,153,.2)";
+        for (let x = 0; x < c.width; x += 24) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, c.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < c.height; y += 24) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(c.width, y);
+          ctx.stroke();
+        }
+      }
+      function bindEvents() {
+        $("themeBtn").addEventListener("click", () => {
+          document.body.dataset.theme =
+            document.body.dataset.theme === "dark" ? "light" : "dark";
+          localStorage.setItem(THEME_KEY, document.body.dataset.theme);
+        });
+        $("newProjectBtn").addEventListener("click", () => openProjectModal());
+        $("sampleBtn").addEventListener("click", () => {
+          if (
+            !state.projects.length ||
+            confirm(
+              "Replace current notebook with sample data? Export first if needed.",
+            )
+          )
+            sampleData();
+        });
+        $("clearBtn").addEventListener("click", () => {
+          if (confirm("Clear all local notebook data?")) {
+            state = {
+              projects: [],
+              entries: [],
+              selectedProjectId: null,
+              view: "notebook",
+              activeTab: "All",
+            };
+            localStorage.removeItem(STORAGE_KEY);
+            render();
+            toast("Data cleared");
+          }
+        });
+        $("importBtn").addEventListener("click", () => $("fileInput").click());
+        $("fileInput").addEventListener("change", (e) => {
+          if (e.target.files[0]) importJson(e.target.files[0]);
+          e.target.value = "";
+        });
+        $("exportJsonBtn").addEventListener("click", exportJson);
+        $("exportMdBtn").addEventListener("click", exportMarkdown);
+        $("exportCsvBtn").addEventListener("click", exportCsv);
+        $("printBtn").addEventListener("click", () => window.print());
+        $("searchInput").addEventListener("input", renderProjects);
+        $("clearSearchBtn").addEventListener("click", () => {
+          $("searchInput").value = "";
+          renderProjects();
+        });
+        $("statusFilter").addEventListener("change", renderProjects);
+        $("sortSelect").addEventListener("change", renderProjects);
+        $("projectForm").addEventListener("submit", saveProjectFromForm);
+        $("entryForm").addEventListener("submit", saveEntryFromForm);
+        $("deleteProjectBtn").addEventListener("click", deleteProject);
+        $("deleteEntryBtn").addEventListener("click", deleteEntry);
+        $("entryType").addEventListener("change", updateEntryConditionalFields);
+        $("entryProjectId").addEventListener("change", () =>
+          populateRelated(
+            state.entries.find((e) => e.id === $("entryId").value),
+          ),
+        );
+        $("addMeasurementBtn").addEventListener("click", () => {
+          if (!document.querySelector("[data-measure-row]"))
+            $("measurementRows").innerHTML = "";
+          $("measurementRows").insertAdjacentHTML(
+            "beforeend",
+            measureRowHtml({}),
+          );
+        });
+        $("addCalcRowBtn").addEventListener("click", () => {
+          if (!document.querySelector("[data-calc-row]"))
+            $("calcRows").innerHTML = "";
+          $("calcRows").insertAdjacentHTML("beforeend", calcRowHtml({}));
+        });
+        $("runCalcBtn").addEventListener("click", runCalculation);
+        $("ohmsLawBtn").addEventListener("click", () => {
+          renderCalcRows([
+            { name: "V", value: "12", unit: "V", note: "Voltage" },
+            { name: "R", value: "220", unit: "Ω", note: "Resistance" },
+            { name: "I", value: "V/R", unit: "A", note: "Current" },
+            { name: "P", value: "V*I", unit: "W", note: "Power" },
+          ]);
+          runCalculation();
+        });
+        $("runtimeBtn").addEventListener("click", () => {
+          renderCalcRows([
+            { name: "Ah", value: "6", unit: "Ah", note: "Battery capacity" },
+            { name: "I", value: "1.2", unit: "A", note: "Average current" },
+            {
+              name: "Runtime",
+              value: "Ah/I",
+              unit: "hours",
+              note: "Ideal runtime",
+            },
+          ]);
+          runCalculation();
+        });
+        $("ledBtn").addEventListener("click", () => {
+          renderCalcRows([
+            { name: "Vs", value: "5", unit: "V", note: "Supply" },
+            { name: "Vf", value: "2", unit: "V", note: "LED forward voltage" },
+            { name: "I", value: "0.02", unit: "A", note: "LED current" },
+            {
+              name: "R",
+              value: "(Vs-Vf)/I",
+              unit: "Ω",
+              note: "Series resistor",
+            },
+          ]);
+          runCalculation();
+        });
+        $("gearBtn").addEventListener("click", () => {
+          renderCalcRows([
+            {
+              name: "Driver",
+              value: "20",
+              unit: "teeth",
+              note: "Driving gear",
+            },
+            { name: "Driven", value: "60", unit: "teeth", note: "Driven gear" },
+            {
+              name: "Ratio",
+              value: "Driven/Driver",
+              unit: ":1",
+              note: "Reduction",
+            },
+          ]);
+          runCalculation();
+        });
+        $("attachBtn").addEventListener("click", () =>
+          $("attachmentFile").click(),
+        );
+        $("attachmentFile").addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            currentAttachments.push({
+              id: uid("attach"),
+              name: file.name,
+              type: file.type || "file",
+              data: reader.result,
+              text: String(reader.result).startsWith("data:")
+                ? ""
+                : reader.result,
+              createdAt: new Date().toISOString(),
+            });
+            renderAttachments();
+            toast("Attachment added");
+          };
+          if ((file.type || "").startsWith("image/"))
+            reader.readAsDataURL(file);
+          else reader.readAsText(file);
+          e.target.value = "";
+        });
+        $("clearSketchBtn").addEventListener("click", clearSketch);
+        $("saveSketchBtn").addEventListener("click", () => {
+          const c = $("sketchCanvas");
+          currentAttachments.push({
+            id: uid("attach"),
+            name: `sketch-${today()}.png`,
+            type: "image/png",
+            data: c.toDataURL("image/png"),
+            createdAt: new Date().toISOString(),
+          });
+          renderAttachments();
+          toast("Sketch saved to attachments");
+        });
+        document
+          .querySelectorAll("[data-close]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () => closeModal(btn.dataset.close)),
+          );
+        document.querySelectorAll(".modal-backdrop").forEach((backdrop) =>
+          backdrop.addEventListener("click", (e) => {
+            if (e.target === backdrop) closeModal(backdrop.id);
+          }),
+        );
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape")
+            document
+              .querySelectorAll(".modal-backdrop.open")
+              .forEach((m) => closeModal(m.id));
+        });
+      }
+      bindEvents();
+      loadState();
+    </script>
+  </body>
+</html>
