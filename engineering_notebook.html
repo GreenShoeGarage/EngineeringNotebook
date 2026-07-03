@@ -713,6 +713,39 @@
           border: 0;
         }
       }
+
+      .bench-panel {
+        margin: 0 0 14px;
+        padding: 14px;
+        border: 1px dashed var(--strong);
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,.08));
+      }
+      .bench-panel h3 { margin: 0 0 8px; font-family: var(--serif); }
+      .bench-list { display:grid; gap:7px; }
+      .bench-item {
+        display:flex; justify-content:space-between; gap:10px; align-items:center;
+        padding:7px 9px; border-radius:12px; background:rgba(255,255,255,.28);
+        border:1px solid var(--line); font-size:.86rem;
+      }
+      .mode-strip, .action-strip, .utility-menu { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+      .mode-strip { margin-top:12px; }
+      .action-strip { margin: 0 0 12px; padding: 10px; border:1px dashed var(--line); border-radius:18px; background:rgba(255,255,255,.18); }
+      .next-action-card { border:2px solid var(--accent); background:linear-gradient(135deg, rgba(47,114,153,.13), rgba(255,255,255,.16)); }
+      .entry-card[data-card-type="Failure Report"] { transform: rotate(-.25deg); }
+      .entry-card[data-card-type="Calculation"] { background-image: linear-gradient(var(--surface), var(--surface)), repeating-linear-gradient(0deg, transparent 0 22px, rgba(47,114,153,.12) 22px 23px), repeating-linear-gradient(90deg, transparent 0 22px, rgba(47,114,153,.12) 22px 23px); background-blend-mode: normal; }
+      .entry-card[data-card-type="Failure Report"]:after { content:"REPAIR TAG"; position:absolute; right:18px; top:16px; color:var(--danger); border:2px solid currentColor; border-radius:6px; padding:3px 6px; font-size:.68rem; font-weight:900; transform:rotate(5deg); opacity:.55; }
+      .entry-card[data-card-type="Test Note"]:after { content:"LAB SHEET"; position:absolute; right:18px; top:16px; color:var(--accent); border:2px solid currentColor; border-radius:6px; padding:3px 6px; font-size:.68rem; font-weight:900; transform:rotate(3deg); opacity:.45; }
+      .entry-card[data-card-type="Decision Record"]:after { content:"DECIDED"; position:absolute; right:18px; top:16px; color:var(--purple); border:2px solid currentColor; border-radius:6px; padding:3px 6px; font-size:.68rem; font-weight:900; transform:rotate(-4deg); opacity:.45; }
+      .trace-chain { display:grid; gap:12px; margin-top:12px; }
+      .trace-node { border:1px solid var(--line); background:var(--surface); border-radius:18px; padding:13px; box-shadow:var(--card); position:relative; }
+      .trace-node:not(:last-child):after { content:"↓"; position:absolute; left:24px; bottom:-23px; color:var(--accent); font-size:1.35rem; font-weight:900; }
+      .section-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+      .section-card { border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.18); padding:13px; }
+      .section-card h3 { margin-top:0; font-family:var(--serif); }
+      .checkline { display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); }
+      .checkline input { width:auto; }
+      @media (max-width: 760px) { .section-grid { grid-template-columns:1fr; } }
     </style>
   </head>
   <body data-theme="light">
@@ -722,7 +755,7 @@
           <div class="mark">✦</div>
           <div>
             <h1>
-              FI-058: Engineering Notebook <span class="version">v2.0.1</span>
+              FI-058: Engineering Notebook <span class="version">v2.3.0</span>
             </h1>
             <div class="subtitle">
               A whimsical engineering record that connects ideas, calculations,
@@ -745,7 +778,7 @@
         <aside class="panel sidebar">
           <div class="panel-pad">
             <div class="panel-title">
-              <h2>Projects</h2>
+              <h2>Workshop</h2>
               <button id="newProjectBtn" class="primary small">
                 + Project
               </button>
@@ -766,7 +799,7 @@
               </select>
               <div class="autosave" id="autosaveState">autosave ready</div>
             </div>
-            <div class="project-list" id="projectList"></div>
+            <div id="benchPanel"></div><div class="project-list" id="projectList"></div>
           </div>
         </aside>
         <section class="panel workspace" id="workspace"></section>
@@ -786,6 +819,9 @@
             ><label
               ><span>Status</span
               ><select id="projectStatus"></select></label
+            ><label
+              ><span>Mode</span
+              ><select id="projectMode"></select></label
             ><label
               ><span>Revision</span
               ><input
@@ -810,7 +846,7 @@
               ><input
                 id="projectNextAction"
                 placeholder="What should happen next?"
-            /></label>
+            /></label><label class="wide starter-row" id="starterCardsRow"><span>Starter cards</span><label class="checkline"><input id="projectStarterCards" type="checkbox" checked /> Create requirements, open questions, first sketch, first calculation, and first test-plan cards</label></label>
           </div>
           <div class="modal-foot">
             <button type="button" id="deleteProjectBtn" class="danger">
@@ -1002,7 +1038,7 @@
     <input id="fileInput" type="file" accept="application/json,.json" hidden />
     <div class="toast" id="toast">Saved</div>
     <script>
-      const VERSION = "v2.0.1";
+      const VERSION = "v2.3.0";
       const STORAGE_KEY = "fi058_engineering_notebook_v2";
       const OLD_STORAGE_KEY = "fi058_engineering_notebook_v1";
       const THEME_KEY = "fi058_engineering_notebook_theme";
@@ -1016,16 +1052,22 @@
         "Revision",
         "Archive",
       ];
+      const projectModes = ["Idea", "Build", "Test", "Repair"];
       const entryTypes = [
         "Idea",
+        "Requirement",
+        "Open Question",
         "Design Note",
         "Calculation",
+        "Decision Record",
         "Build Log",
+        "Part / Material",
+        "Compromise",
+        "Test Plan",
         "Test Note",
         "Failure Report",
         "Repair Log",
         "Revision Note",
-        "Decision Record",
         "Lesson Learned",
       ];
       const entryStatuses = [
@@ -1044,17 +1086,24 @@
         "Root Cause Found",
         "Fixed",
         "Closed",
+        "Verified",
+        "Unverified",
       ];
       const typeColors = {
         Idea: "#8a6dd6",
+        Requirement: "#2f7299",
+        "Open Question": "#7163a8",
         "Design Note": "#2f7299",
         Calculation: "#3f7f51",
+        "Decision Record": "#6b7358",
         "Build Log": "#9a5532",
+        "Part / Material": "#9a5532",
+        Compromise: "#a96f24",
+        "Test Plan": "#2d8b92",
         "Test Note": "#2d8b92",
         "Failure Report": "#a33c35",
         "Repair Log": "#a96f24",
         "Revision Note": "#5765a8",
-        "Decision Record": "#6b7358",
         "Lesson Learned": "#5d7f3f",
       };
       const CLOSED_FAILURE_STATUSES = [
@@ -1068,7 +1117,7 @@
         projects: [],
         entries: [],
         selectedProjectId: null,
-        view: "notebook",
+        view: "story",
         activeTab: "All",
       };
       let saveTimer = null;
@@ -1098,6 +1147,9 @@
           .filter(Boolean);
       const escapeRegExp = (s) =>
         String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const inferMode = (status = "") =>
+        /repair|failure/i.test(status) ? "Repair" : /test/i.test(status) ? "Test" : /build|prototype/i.test(status) ? "Build" : "Idea";
+      const normalizeView = (view) => ({ notebook: "story", testbench: "test", failures: "fix", revisions: "build", calculators: "tools", reports: "tools" }[view] || view);
       const mdCell = (s) =>
         String(s ?? "")
           .replace(/\|/g, "\\|")
@@ -1135,12 +1187,13 @@
           projects: (obj.projects || []).map((p) => ({
             owner: "",
             targetDate: "",
+            mode: inferMode(p.status),
             ...p,
           })),
           entries: (obj.entries || []).map((e) => ({ attachments: [], ...e })),
           selectedProjectId:
             obj.selectedProjectId || obj.projects?.[0]?.id || null,
-          view: obj.view || "notebook",
+          view: normalizeView(obj.view || "story"),
           activeTab: obj.activeTab || "All",
         };
       }
@@ -1167,6 +1220,9 @@
         $("projectStatus").innerHTML = projectStatuses
           .map((s) => `<option>${s}</option>`)
           .join("");
+        $("projectMode").innerHTML = projectModes
+          .map((s) => `<option>${s}</option>`)
+          .join("");
         $("entryType").innerHTML = entryTypes
           .map((s) => `<option>${s}</option>`)
           .join("");
@@ -1182,12 +1238,17 @@
         const pass = tests.filter((e) => e.status === "Passed").length;
         const repairs = es.filter((e) => e.type === "Repair Log").length;
         const lessons = es.filter((e) => e.type === "Lesson Learned").length;
+        const retests = es.filter((e) => e.status === "Needs Retest" || /retest/i.test(`${e.title} ${e.body}`)).length;
+        const requirements = es.filter((e) => e.type === "Requirement");
+        const unverified = requirements.filter((e) => e.status !== "Verified").length;
         let health =
-          65 +
-          pass * 6 +
+          68 +
+          pass * 5 +
           repairs * 3 +
           lessons * 2 -
-          open.length * 15 -
+          open.length * 14 -
+          retests * 4 -
+          unverified * 2 -
           failures.filter((f) => f.failureSeverity === "Critical").length * 18;
         health = Math.max(0, Math.min(100, health));
         return {
@@ -1198,6 +1259,9 @@
           pass,
           repairs,
           lessons,
+          retests,
+          requirements: requirements.length,
+          unverified,
           health,
         };
       }
@@ -1244,23 +1308,44 @@
         return ps;
       }
       function render() {
+        state.view = normalizeView(state.view || "story");
         if (!state.selectedProjectId && state.projects[0])
           state.selectedProjectId = state.projects[0].id;
         renderProjects();
         renderWorkspace();
       }
+      function renderBenchPanel() {
+        const panel = $("benchPanel");
+        if (!panel) return;
+        const failures = state.entries.filter((e) => e.type === "Failure Report" && !isClosedFailureStatus(e.status));
+        const retests = state.entries.filter((e) => e.status === "Needs Retest" || /retest/i.test(e.title + " " + e.body));
+        const noNext = state.projects.filter((p) => !p.nextAction);
+        const failedTests = state.entries.filter((e) => e.type === "Test Note" && e.status === "Failed");
+        const reqs = state.entries.filter((e) => e.type === "Requirement");
+        const unverified = reqs.filter((e) => e.status !== "Verified");
+        const items = [
+          [failures.length, "open failures", "fix"],
+          [retests.length, "items need retest", "test"],
+          [failedTests.length, "failed tests", "test"],
+          [unverified.length, "requirements unverified", "trace"],
+          [noNext.length, "projects missing next action", "story"],
+        ].filter((x) => x[0] > 0);
+        panel.innerHTML = `<div class="bench-panel"><h3>Today at the Bench</h3><div class="bench-list">${items.length ? items.map(([n, label, v]) => `<div class="bench-item"><span><b>${n}</b> ${label}</span><button class="small" onclick="setView('${v}')">View</button></div>`).join("") : `<div class="bench-item"><span>Bench is clear. Pick a project and make the next useful note.</span></div>`}</div></div>`;
+      }
       function renderProjects() {
+        renderBenchPanel();
         const list = $("projectList");
         const ps = filteredProjects();
         if (!ps.length) {
           list.innerHTML =
-            '<div class="empty">No projects yet. Load sample data or start a fresh notebook.</div>';
+            '<div class="empty">No projects yet. Start a fresh notebook or load the fume-extractor sample.</div>';
           return;
         }
         list.innerHTML = ps
           .map((p, i) => {
             const s = projectStats(p);
-            return `<article class="project-card ${p.id === state.selectedProjectId ? "active" : ""}" style="--tilt:${[-1.1, 0.7, -0.4, 1][i % 4]}deg" onclick="selectProject('${p.id}')"><h3>${escapeHtml(p.name)}</h3><div class="pill">${escapeHtml(p.status)} · ${escapeHtml(p.revision || "no rev")}</div><p style="color:var(--muted);margin:.65rem 0 0;line-height:1.35">${escapeHtml(p.description || "").slice(0, 135)}</p><div class="healthbar" title="Project health ${s.health}%"><span style="--w:${s.health}%"></span></div><div class="meta"><span class="pill">${s.entries} entries</span><span class="pill">${s.open} open failures</span><span class="pill">${s.health}% health</span></div></article>`;
+            const mode = p.mode || inferMode(p.status);
+            return `<article class="project-card ${p.id === state.selectedProjectId ? "active" : ""}" style="--tilt:${[-1.1, 0.7, -0.4, 1][i % 4]}deg" onclick="selectProject('${p.id}')"><h3>${escapeHtml(p.name)}</h3><div class="pill">${escapeHtml(mode)} mode · ${escapeHtml(p.revision || "no rev")}</div><p style="color:var(--muted);margin:.65rem 0 0;line-height:1.35">${escapeHtml(p.description || "").slice(0, 135)}</p><div class="healthbar" title="Project health ${s.health}%"><span style="--w:${s.health}%"></span></div><div class="meta"><span class="pill">${s.open} open failures</span><span class="pill">${s.retests} retest</span><span class="pill">${s.health}% health</span></div><p style="margin:.6rem 0 0;font-size:.86rem"><b>Next:</b> ${escapeHtml(p.nextAction || "choose the next bench move")}</p></article>`;
           })
           .join("");
       }
@@ -1269,6 +1354,7 @@
         autosave("project selected");
         render();
       };
+      function viewList() { return ["story", "design", "build", "test", "fix", "trace", "tools"]; }
       function renderWorkspace() {
         const p = state.projects.find((x) => x.id === state.selectedProjectId);
         if (!p) {
@@ -1276,134 +1362,165 @@
             '<div class="empty" style="margin:18px">No project selected. Create a project to begin the notebook.</div>';
           return;
         }
+        state.view = normalizeView(state.view || "story");
         const s = projectStats(p);
+        const mode = p.mode || inferMode(p.status);
         $("workspace").innerHTML =
-          `<section class="hero"><div><div class="pill">${escapeHtml(p.status)} · ${escapeHtml(p.revision || "no revision")} · ${escapeHtml(p.owner || "unassigned")}</div><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.description || "")}</p><div class="stats"><div class="stat"><strong>${s.health}%</strong><span>health</span></div><div class="stat"><strong>${s.entries}</strong><span>entries</span></div><div class="stat"><strong>${s.open}</strong><span>open failures</span></div><div class="stat"><strong>${s.tests}</strong><span>tests</span></div><div class="stat"><strong>${s.repairs}</strong><span>repairs</span></div><div class="stat"><strong>${s.lessons}</strong><span>lessons</span></div></div></div><div class="hero-actions"><button class="primary" onclick="openEntryModal(null,'${p.id}')">+ Entry</button><button onclick="openEntryModal(null,'${p.id}','Test Note')">Test Note</button><button onclick="openEntryModal(null,'${p.id}','Failure Report')">Failure</button><button onclick="openEntryModal(null,'${p.id}','Calculation')">Calculation</button><button onclick="openProjectModal('${p.id}')">Edit Project</button></div></section><div class="main-grid"><section><div class="view-tabs">${["notebook", "testbench", "failures", "revisions", "calculators", "reports"].map((v) => `<button class="tab ${state.view === v ? "active" : ""}" onclick="setView('${v}')">${labelView(v)}</button>`).join("")}</div><div id="viewBody">${renderView(p)}</div></section><aside class="side-stack">${renderSide(p)}</aside></div><div class="footer-note">Engineering Notebook | M.B. Parks, Green Shoe Garage (c) 2026. Local-first single-file app.</div>`;
+          `<section class="hero"><div><div class="pill">${escapeHtml(mode)} mode · ${escapeHtml(p.status)} · ${escapeHtml(p.revision || "no revision")} · ${escapeHtml(p.owner || "unassigned")}</div><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.description || "")}</p><div class="stats"><div class="stat"><strong>${s.health}%</strong><span>health</span></div><div class="stat"><strong>${s.open}</strong><span>open failures</span></div><div class="stat"><strong>${s.retests}</strong><span>retests</span></div><div class="stat"><strong>${s.unverified}</strong><span>unverified reqs</span></div><div class="stat"><strong>${s.tests}</strong><span>tests</span></div><div class="stat"><strong>${s.entries}</strong><span>cards</span></div></div><div class="mode-strip"><span class="pill">Mode</span>${projectModes.map((m)=>`<button class="small ${mode===m?"primary":""}" onclick="setProjectMode('${p.id}','${m}')">${m}</button>`).join("")}</div></div><div class="hero-actions"><button class="primary" onclick="openEntryModal(null,'${p.id}', defaultTypeForView())">+ Smart Card</button><button onclick="updateNextAction('${p.id}')">Update Next Action</button><button onclick="openProjectModal('${p.id}')">Edit Project</button></div></section><div class="main-grid"><section><div class="view-tabs">${viewList().map((v) => `<button class="tab ${state.view === v ? "active" : ""}" onclick="setView('${v}')">${labelView(v)}</button>`).join("")}</div><div id="viewBody">${renderView(p)}</div></section><aside class="side-stack">${renderSide(p)}</aside></div><div class="footer-note">Engineering Notebook | M.B. Parks, Green Shoe Garage (c) 2026. Local-first single-file app.</div>`;
       }
       function labelView(v) {
-        return {
-          notebook: "Notebook",
-          testbench: "Test Bench",
-          failures: "Failure Garden",
-          revisions: "Revisions",
-          calculators: "Calculators",
-          reports: "Reports",
-        }[v];
+        return { story: "Story", design: "Design", build: "Build", test: "Test", fix: "Fix", trace: "Trace", tools: "Tools" }[v] || v;
       }
       window.setView = (v) => {
-        state.view = v;
+        state.view = normalizeView(v);
         autosave("view changed");
         renderWorkspace();
       };
+      window.setProjectMode = (id, mode) => {
+        const p = state.projects.find((x) => x.id === id);
+        if (!p) return;
+        p.mode = mode;
+        p.updatedAt = new Date().toISOString();
+        autosave("mode changed");
+        render();
+      };
+      window.updateNextAction = (id) => {
+        const p = state.projects.find((x) => x.id === id);
+        if (!p) return;
+        const next = prompt("What is the next useful bench move?", p.nextAction || "");
+        if (next === null) return;
+        p.nextAction = next.trim();
+        p.updatedAt = new Date().toISOString();
+        autosave("next action updated");
+        render();
+      };
+      function defaultTypeForView() {
+        return { story: "Idea", design: "Requirement", build: "Build Log", test: "Test Note", fix: "Failure Report", trace: "Decision Record", tools: "Calculation" }[state.view] || "Idea";
+      }
       function tabMatch(e, tab) {
-        if (tab === "All") return true;
-        if (tab === "Design")
-          return [
-            "Idea",
-            "Design Note",
-            "Decision Record",
-            "Revision Note",
-          ].includes(e.type);
-        if (tab === "Test") return e.type === "Test Note";
-        if (tab === "Failures") return e.type === "Failure Report";
-        if (tab === "Repairs") return e.type === "Repair Log";
-        if (tab === "Lessons") return e.type === "Lesson Learned";
-        if (tab === "Calculations") return e.type === "Calculation";
+        if (tab === "story") return true;
+        if (tab === "design") return ["Idea", "Requirement", "Open Question", "Design Note", "Decision Record", "Calculation"].includes(e.type);
+        if (tab === "build") return ["Build Log", "Part / Material", "Compromise", "Revision Note"].includes(e.type);
+        if (tab === "test") return ["Test Plan", "Test Note", "Calculation"].includes(e.type);
+        if (tab === "fix") return ["Failure Report", "Repair Log", "Lesson Learned", "Test Note"].includes(e.type);
         return true;
       }
+      function actionButtons(p) {
+        const pid = p.id;
+        const set = {
+          story: [["Idea", "Add Note"], ["Decision Record", "Add Decision"], ["Lesson Learned", "Add Lesson"]],
+          design: [["Requirement", "Add Requirement"], ["Calculation", "Add Calculation"], ["Decision Record", "Add Decision"], ["Open Question", "Add Question"]],
+          build: [["Build Log", "Add Build Log"], ["Part / Material", "Add Part"], ["Revision Note", "Revision Change"], ["Compromise", "Known Compromise"]],
+          test: [["Test Note", "Start Test Run"], ["Test Plan", "Add Test Plan"], ["Calculation", "Add Measurement Calc"]],
+          fix: [["Failure Report", "Report Failure"], ["Repair Log", "Log Repair"], ["Test Note", "Mark Retest"], ["Lesson Learned", "Add Lesson"]],
+          trace: [["Requirement", "Add Requirement"], ["Test Note", "Add Verification Test"], ["Decision Record", "Add Link Note"]],
+          tools: [["Calculation", "Add Calculation"]],
+        }[state.view] || [];
+        return `<div class="action-strip"><span class="pill">Bench actions</span>${set.map(([type,label]) => `<button class="small ${label.includes("Start") || label.includes("Report") ? "primary" : ""}" onclick="openEntryModal(null,'${pid}','${type}')">${label}</button>`).join("")}</div>`;
+      }
       function renderView(p) {
-        if (state.view === "testbench") return renderTestBench(p);
-        if (state.view === "failures") return renderFailureGarden(p);
-        if (state.view === "revisions") return renderRevisions(p);
-        if (state.view === "calculators") return renderCalculators(p);
-        if (state.view === "reports") return renderReports(p);
-        return renderNotebook(p);
+        if (state.view === "design") return renderDesign(p);
+        if (state.view === "build") return renderBuild(p);
+        if (state.view === "test") return renderTest(p);
+        if (state.view === "fix") return renderFix(p);
+        if (state.view === "trace") return renderTrace(p);
+        if (state.view === "tools") return renderTools(p);
+        return renderStory(p);
       }
-      function renderNotebook(p) {
-        const tabs = [
-          "All",
-          "Design",
-          "Test",
-          "Failures",
-          "Repairs",
-          "Lessons",
-          "Calculations",
-        ];
-        const es = entriesForProject(p.id).filter((e) =>
-          tabMatch(e, state.activeTab),
-        );
-        return `<div class="nav-tabs">${tabs.map((t) => `<button class="tab ${state.activeTab === t ? "active" : ""}" onclick="setEntryTab('${t}')">${t}</button>`).join("")}</div><div class="entry-list">${es.length ? es.map(renderEntryCard).join("") : '<div class="empty">This notebook page is blank. Add a note, test, calculation, failure, repair, or lesson.</div>'}</div>`;
+      function renderStory(p) {
+        const es = entriesForProject(p.id);
+        return `${actionButtons(p)}<div class="entry-list">${es.length ? es.map(renderEntryCard).join("") : '<div class="empty">This object has no story yet. Add the first idea, requirement, build note, test, failure, repair, or lesson.</div>'}</div>`;
       }
-      window.setEntryTab = (t) => {
-        state.activeTab = t;
-        autosave("tab changed");
-        renderWorkspace();
-      };
+      function renderDesign(p) {
+        const es = entriesForProject(p.id);
+        return `${actionButtons(p)}<div class="section-grid">
+          ${renderEntrySection("Requirements", es, ["Requirement"], "What must this object do, and has it been verified?")}
+          ${renderEntrySection("Design Decisions", es, ["Decision Record", "Design Note"], "Why is the object shaped this way?")}
+          ${renderEntrySection("Calculations", es, ["Calculation"], "Numbers, assumptions, formulas, and saved calculator results.")}
+          ${renderEntrySection("Open Questions", es, ["Open Question", "Idea"], "Unknowns to resolve before the next build or test.")}
+        </div>`;
+      }
+      function renderBuild(p) {
+        const es = entriesForProject(p.id);
+        return `${actionButtons(p)}${renderRevisions(p)}<div class="section-grid">
+          ${renderEntrySection("Build Notes", es, ["Build Log"], "What was fabricated, assembled, wired, printed, cut, drilled, or changed?")}
+          ${renderEntrySection("Parts and Materials", es, ["Part / Material"], "Materials, parts, suppliers, substitutions, and field replacements.")}
+          ${renderEntrySection("Known Compromises", es, ["Compromise"], "Honest notes about hacks that future you should revisit.")}
+          ${renderEntrySection("Revision Changes", es, ["Revision Note"], "What changed between object versions?")}
+        </div>`;
+      }
+      function renderTest(p) {
+        const es = entriesForProject(p.id);
+        const needs = es.filter((e) => e.status === "Needs Retest" || /retest/i.test(e.title + " " + e.body));
+        return `${actionButtons(p)}<div class="report-box"><h3>Test Bench</h3><p>Use this mode while standing at the bench. Start a test run, capture measurements, then connect failures and repairs through Related Entries.</p><div class="hero-actions" style="justify-content:flex-start"><button class="primary" onclick="openEntryModal(null,'${p.id}','Test Note')">Start Test Run</button><button onclick="openEntryModal(null,'${p.id}','Failure Report')">Log Failure</button><button onclick="openEntryModal(null,'${p.id}','Repair Log')">Log Repair</button></div></div>${needs.length ? `<div class="report-box"><h3>Retest Queue</h3>${needs.map(renderSmallEntry).join("")}</div>` : ""}<div class="section-grid">
+          ${renderEntrySection("Test Plans", es, ["Test Plan"], "What should be tested before the object is trusted?")}
+          ${renderEntrySection("Test Runs", es, ["Test Note"], "Actual tests, observations, pass/fail results, and measurements.")}
+        </div>`;
+      }
+      function renderFix(p) {
+        const es = entriesForProject(p.id);
+        const failures = es.filter((e) => e.type === "Failure Report");
+        return `${actionButtons(p)}<div class="report-box"><h3>Failure Garden</h3><p>Open failures are thorns, critical failures are mushrooms, fixed failures become flowers. Click any plant to open the real repair tag.</p>${renderFailureGarden(p)}</div><div class="section-grid">
+          ${renderEntrySection("Open Failures", es.filter((e)=>e.type==="Failure Report" && !isClosedFailureStatus(e.status)), ["Failure Report"], "Problems that still need action.")}
+          ${renderEntrySection("Repairs", es, ["Repair Log"], "What was changed, replaced, repaired, or verified.")}
+          ${renderEntrySection("Retests", es.filter((e)=>e.type==="Test Note" && (/retest/i.test(e.title + " " + e.body) || e.status==="Needs Retest" || e.status==="Passed")), ["Test Note"], "Tests that verify whether a fix actually held.")}
+          ${renderEntrySection("Lessons Learned", es, ["Lesson Learned"], "Reusable knowledge to carry into the next project.")}
+        </div>`;
+      }
+      function renderTools(p) {
+        return `<div class="utility-menu"><button class="small" onclick="exportMarkdown()">Export Markdown</button><button class="small" onclick="exportJson()">Export JSON</button><button class="small" onclick="exportCsv()">Failure CSV</button><button class="small" onclick="window.print()">Print Notebook</button></div>${renderCalculators(p)}${renderReports(p)}`;
+      }
+      function renderEntrySection(title, source, types, empty) {
+        const items = source.filter((e) => types.includes(e.type));
+        return `<div class="section-card"><h3>${title}</h3>${items.length ? items.map(renderSmallEntry).join("") : `<p style="color:var(--muted)">${empty}</p>`}</div>`;
+      }
+      function renderSmallEntry(e) {
+        return `<div class="timeline-item"><b>${escapeHtml(e.title)}</b><br><span style="color:var(--muted)">${fmt(e.date)} · ${escapeHtml(e.type)} · ${escapeHtml(e.status)}</span><br><button class="small" onclick="openEntryModal('${e.id}')">Open</button></div>`;
+      }
       function renderEntryCard(e) {
-        let stamp = "";
-        if (e.status === "Passed")
-          stamp = '<span class="stamp pass">PASS</span>';
-        if (e.status === "Failed" || e.status === "Open")
-          stamp = '<span class="stamp fail">FAIL</span>';
-        if (e.status === "Needs Retest" || e.status === "Investigating")
-          stamp = '<span class="stamp warn">RETEST</span>';
-        return `<article class="entry-card" style="--entry-color:${typeColors[e.type] || "var(--accent)"}"><div class="entry-header"><div><div class="meta"><span class="pill">${fmt(e.date)}</span><span class="pill">${escapeHtml(e.type)}</span><span class="pill">${escapeHtml(e.status)}</span><span class="pill">${escapeHtml(e.revision || "no rev")}</span>${stamp}</div><h3>${escapeHtml(e.title)}</h3></div><div class="entry-actions"><button class="small" onclick="openEntryModal('${e.id}')">Edit</button><button class="small" onclick="duplicateEntry('${e.id}')">Duplicate</button></div></div><div class="entry-body">${escapeHtml(e.body || "")}</div>${renderStructured(e)}${(e.attachments || []).length ? `<div class="meta">${e.attachments.map((a) => `<span class="pill">📎 ${escapeHtml(a.name)}</span>`).join("")}</div>` : ""}</article>`;
+        const stamp = e.status === "Failed" ? '<span class="stamp">FAILED TEST</span>' : isClosedFailureStatus(e.status) ? '<span class="stamp ok">REPAIRED</span>' : e.status === "Passed" ? '<span class="stamp ok">PASSED</span>' : "";
+        return `<article class="entry-card" data-card-type="${escapeHtml(e.type)}" style="--entry-color:${typeColors[e.type] || "var(--accent)"}"><div class="entry-header"><div><div class="meta"><span class="pill">${fmt(e.date)}</span><span class="pill">${escapeHtml(e.type)}</span><span class="pill">${escapeHtml(e.status)}</span><span class="pill">${escapeHtml(e.revision || "no rev")}</span>${stamp}</div><h3>${escapeHtml(e.title)}</h3></div><div class="entry-actions"><button class="small" onclick="openEntryModal('${e.id}')">Edit</button><button class="small" onclick="duplicateEntry('${e.id}')">Duplicate</button></div></div><div class="entry-body">${escapeHtml(e.body || "")}</div>${renderStructured(e)}${renderRelations(e)}${(e.attachments || []).length ? `<div class="meta">${e.attachments.map((a) => `<span class="pill">📎 ${escapeHtml(a.name)}</span>`).join("")}</div>` : ""}</article>`;
       }
       function renderStructured(e) {
         let out = "";
-        if (e.type === "Test Note")
-          out += `<div class="mini-card"><b>Objective:</b> ${escapeHtml(e.testObjective || "")}<br><b>Expected:</b> ${escapeHtml(e.expectedResult || "")}<br><b>Actual:</b> ${escapeHtml(e.actualResult || "")}</div>`;
-        if (e.type === "Failure Report")
-          out += `<div class="mini-card"><b>Severity:</b> ${escapeHtml(e.failureSeverity || "")} · <b>Subsystem:</b> ${escapeHtml(e.affectedSubsystem || "")}<br><b>Symptoms:</b> ${escapeHtml(e.failureSymptoms || "")}<br><b>Action:</b> ${escapeHtml(e.correctiveAction || "")}</div>`;
-        if ((e.measurements || []).length)
-          out += `<div class="mini-card"><b>Measurements</b><br>${e.measurements.map((m) => `${escapeHtml(m.name)}: ${escapeHtml(m.value)} ${escapeHtml(m.unit)} ${m.note ? "— " + escapeHtml(m.note) : ""}`).join("<br>")}</div>`;
-        if (e.calcResult)
-          out += `<div class="calc-result">${escapeHtml(e.calcResult)}</div>`;
+        if (e.type === "Test Note") out += `<div class="structured"><b>Objective:</b> ${escapeHtml(e.testObjective || "")}<br><b>Setup:</b> ${escapeHtml(e.testSetup || "")}<br><b>Expected:</b> ${escapeHtml(e.expectedResult || "")}<br><b>Actual:</b> ${escapeHtml(e.actualResult || "")}</div>`;
+        if (e.type === "Failure Report") out += `<div class="structured"><b>Severity:</b> ${escapeHtml(e.failureSeverity || "")}<br><b>Subsystem:</b> ${escapeHtml(e.affectedSubsystem || "")}<br><b>Symptoms:</b> ${escapeHtml(e.failureSymptoms || "")}<br><b>Cause:</b> ${escapeHtml(e.confirmedCause || e.suspectedCause || "")}<br><b>Action:</b> ${escapeHtml(e.correctiveAction || "")}</div>`;
+        if ((e.measurements || []).length) out += `<table><thead><tr><th>Measurement</th><th>Value</th><th>Unit</th><th>Note</th></tr></thead><tbody>${e.measurements.map((m) => `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.value)}</td><td>${escapeHtml(m.unit)}</td><td>${escapeHtml(m.note)}</td></tr>`).join("")}</tbody></table>`;
+        if (e.calcResult) out += `<pre class="calc-result">${escapeHtml(e.calcResult)}</pre>`;
         return out;
+      }
+      function renderRelations(e) {
+        const ids = e.relatedEntryIds || [];
+        if (!ids.length) return "";
+        const links = ids.map((id) => state.entries.find((x) => x.id === id)).filter(Boolean);
+        return `<div class="meta"><span class="pill">linked</span>${links.map((x) => `<button class="small" onclick="openEntryModal('${x.id}')">${escapeHtml(x.type)}: ${escapeHtml(x.title).slice(0,42)}</button>`).join("")}</div>`;
       }
       function renderSide(p) {
         const es = entriesForProject(p.id);
-        const next = escapeHtml(p.nextAction || "No next action recorded.");
-        return `<div class="mini-card"><h3>Next Action</h3><p>${next}</p></div><div class="mini-card"><h3>Object Memory</h3><div class="timeline">${
-          es
-            .slice(0, 8)
-            .map(
-              (e) =>
-                `<div class="timeline-item"><b>${escapeHtml(e.type)}</b><br><span style="color:var(--muted)">${fmt(e.date)} · ${escapeHtml(e.title)}</span></div>`,
-            )
-            .join("") || "<p>No entries yet.</p>"
-        }</div></div><div class="mini-card"><h3>Tags</h3><div class="meta">${[...new Set([...(p.tags || []), ...es.flatMap((e) => e.tags || [])])].map((t) => `<span class="pill">${escapeHtml(t)}</span>`).join("") || '<span class="pill">none</span>'}</div></div>`;
-      }
-      function renderTestBench(p) {
-        const tests = entriesForProject(p.id).filter(
-          (e) => e.type === "Test Note",
-        );
-        return `<div class="report-box"><h3>Bench Mode</h3><p>Use this when you are standing at the bench and need fast test logging.</p><div class="hero-actions" style="justify-content:flex-start"><button class="primary" onclick="openEntryModal(null,'${p.id}','Test Note')">Start Test Note</button><button onclick="openEntryModal(null,'${p.id}','Failure Report')">Log Failure</button><button onclick="openEntryModal(null,'${p.id}','Repair Log')">Log Repair</button></div></div><div class="entry-list">${tests.length ? tests.map(renderEntryCard).join("") : '<div class="empty">No tests yet. The object is waiting on the bench.</div>'}</div>`;
+        const s = projectStats(p);
+        const next = escapeHtml(p.nextAction || "No next action yet. Give future you a breadcrumb.");
+        return `<div class="mini-card next-action-card"><h3>Next Action</h3><p>${next}</p><button class="small primary" onclick="updateNextAction('${p.id}')">Update</button></div><div class="mini-card"><h3>Object Story</h3><div class="timeline">${es.slice(0, 7).map((e) => `<div class="timeline-item"><b>${escapeHtml(e.type)}</b><br><span style="color:var(--muted)">${fmt(e.date)} · ${escapeHtml(e.title)}</span></div>`).join("") || "<p>No entries yet.</p>"}</div></div><div class="mini-card"><h3>Engineering Prompts</h3><p>${s.unverified ? `${s.unverified} requirement(s) need verification.` : "Requirements look verified or not yet defined."}</p><p>${s.retests ? `${s.retests} item(s) mention retest.` : "No retest queue."}</p><p>${s.open ? `${s.open} open failure(s).` : "No open failures."}</p></div><div class="mini-card"><h3>Tags</h3><div class="meta">${[...new Set([...(p.tags || []), ...es.flatMap((e) => e.tags || [])])].map((t) => `<span class="pill">${escapeHtml(t)}</span>`).join("") || '<span class="pill">none</span>'}</div></div>`;
       }
       function renderFailureGarden(p) {
-        const fs = entriesForProject(p.id).filter(
-          (e) => e.type === "Failure Report",
-        );
+        const fs = entriesForProject(p.id).filter((e) => e.type === "Failure Report");
         return `<div class="garden">${fs.length ? fs.map((f) => `<div class="garden-card"><div class="garden-icon">${isClosedFailureStatus(f.status) ? "🌼" : f.failureSeverity === "Critical" ? "🍄" : "🌵"}</div><h3>${escapeHtml(f.title)}</h3><p>${escapeHtml(f.failureSeverity || "")} · ${escapeHtml(f.status)}</p><p>${escapeHtml(f.affectedSubsystem || "")}</p><button class="small" onclick="openEntryModal('${f.id}')">Open</button></div>`).join("") : '<div class="empty">No failures yet. Either it is excellent, or it has not been tested hard enough.</div>'}</div>`;
       }
       function renderRevisions(p) {
         const es = entriesForProject(p.id);
         const revs = [...new Set(es.map((e) => e.revision || "No revision"))];
-        return `<div class="report-box"><h3>Revision Compare</h3><p>Pick two revisions mentally from the columns below. Each column groups entries by revision so design intent, tests, failures, and repairs stay connected.</p></div><div class="compare">${revs
-          .slice(0, 2)
-          .map(
-            (r) =>
-              `<div class="report-box"><h3>${escapeHtml(r)}</h3>${es
-                .filter((e) => (e.revision || "No revision") === r)
-                .map(
-                  (e) =>
-                    `<p><b>${escapeHtml(e.type)}</b><br>${escapeHtml(e.title)}<br><span style="color:var(--muted)">${escapeHtml(e.status)}</span></p>`,
-                )
-                .join("")}</div>`,
-          )
-          .join(
-            "",
-          )}${revs.length === 1 ? '<div class="report-box"><h3>Another revision</h3><p>Add entries under Rev B or Prototype 2 to compare change history.</p></div>' : ""}</div><div class="report-box"><h3>All Revisions</h3><div class="meta">${revs.map((r) => `<span class="pill">${escapeHtml(r)} · ${es.filter((e) => (e.revision || "No revision") === r).length}</span>`).join("")}</div></div>`;
+        return `<div class="report-box"><h3>Revision Compare</h3><p>Entries are grouped by revision so changes, tests, failures, and repairs can be compared without a spreadsheet.</p></div><div class="compare">${revs.slice(0, 2).map((r) => `<div class="report-box"><h3>${escapeHtml(r)}</h3>${es.filter((e) => (e.revision || "No revision") === r).map((e) => `<p><b>${escapeHtml(e.type)}</b><br>${escapeHtml(e.title)}<br><span style="color:var(--muted)">${escapeHtml(e.status)}</span></p>`).join("")}</div>`).join("")}${revs.length === 1 ? '<div class="report-box"><h3>Another revision</h3><p>Add entries under Rev B or Prototype 2 to compare change history.</p></div>' : ""}</div><div class="report-box"><h3>All Revisions</h3><div class="meta">${revs.map((r) => `<span class="pill">${escapeHtml(r)} · ${es.filter((e) => (e.revision || "No revision") === r).length}</span>`).join("")}</div></div>`;
+      }
+      function renderTrace(p) {
+        const es = entriesForProject(p.id).reverse();
+        const linked = es.filter((e) => (e.relatedEntryIds || []).length);
+        const reqs = es.filter((e) => e.type === "Requirement");
+        const unverified = reqs.filter((e) => e.status !== "Verified");
+        const testsNoReq = es.filter((e) => e.type === "Test Note" && !(e.relatedEntryIds || []).some((id) => state.entries.find((x)=>x.id===id)?.type === "Requirement"));
+        const chains = linked.length ? linked.map((e) => {
+          const links = (e.relatedEntryIds || []).map((id) => state.entries.find((x) => x.id === id)).filter(Boolean);
+          return `<div class="trace-chain">${[...links, e].map((x) => `<div class="trace-node"><span class="pill">${escapeHtml(x.type)}</span><h3>${escapeHtml(x.title)}</h3><p>${escapeHtml(x.body || "").slice(0,220)}</p><button class="small" onclick="openEntryModal('${x.id}')">Open</button></div>`).join("")}</div>`;
+        }).join("") : "";
+        return `${actionButtons(p)}<div class="report-box"><h3>Trace View</h3><p>This is the design-to-test bridge. Link cards with the Related Entries field to connect requirements, calculations, decisions, tests, failures, repairs, and retests.</p><div class="meta"><span class="pill">${unverified.length} unverified requirements</span><span class="pill">${testsNoReq.length} tests without linked requirements</span><span class="pill">${linked.length} linked cards</span></div></div>${unverified.length ? `<div class="report-box"><h3>Untested Assumptions / Requirements</h3>${unverified.map(renderSmallEntry).join("")}</div>` : ""}${testsNoReq.length ? `<div class="report-box"><h3>Tests Without Linked Requirements</h3>${testsNoReq.map(renderSmallEntry).join("")}</div>` : ""}${chains || '<div class="empty">No trace chains yet. Edit a card and use Related Entries to connect design intent to evidence.</div>'}`;
       }
       const calcDefs = {
         ohm: {
@@ -1551,6 +1668,9 @@
         $("projectId").value = p?.id || "";
         $("projectName").value = p?.name || "";
         $("projectStatus").value = p?.status || "Concept";
+        $("projectMode").value = p?.mode || inferMode(p?.status || "Concept");
+        $("starterCardsRow").classList.toggle("hidden", !!p);
+        $("projectStarterCards").checked = !p;
         $("projectRevision").value = p?.revision || "";
         $("projectOwner").value = p?.owner || "";
         $("projectTarget").value = p?.targetDate || "";
@@ -1611,11 +1731,13 @@
       function defaultStatusForType(type) {
         return type === "Failure Report"
           ? "Open"
-          : type === "Test Note"
-            ? "Tested"
-            : type === "Repair Log"
-              ? "Repaired"
-              : "Draft";
+          : type === "Requirement"
+            ? "Unverified"
+            : type === "Test Note"
+              ? "Tested"
+              : type === "Repair Log"
+                ? "Repaired"
+                : "Draft";
       }
       function populateRelated(e) {
         const projectId = $("entryProjectId").value;
@@ -1756,6 +1878,7 @@
           id,
           name: $("projectName").value.trim(),
           status: $("projectStatus").value,
+          mode: $("projectMode").value,
           revision: $("projectRevision").value.trim(),
           owner: $("projectOwner").value.trim(),
           targetDate: $("projectTarget").value,
@@ -1766,13 +1889,32 @@
           updatedAt: now,
         };
         const idx = state.projects.findIndex((p) => p.id === id);
+        const isNewProject = idx < 0;
         if (idx >= 0) state.projects[idx] = obj;
         else state.projects.push(obj);
+        if (isNewProject && $("projectStarterCards")?.checked) createStarterCards(obj);
         state.selectedProjectId = id;
         closeModal("projectModal");
         autosave("project saved");
         render();
         toast("Project saved");
+      }
+      function createStarterCards(project) {
+        const now = new Date().toISOString();
+        const starter = [
+          ["Requirement", "First requirement", "What must this object do before it can be trusted?", "Unverified"],
+          ["Open Question", "Open questions", "What is still unknown, risky, or worth testing early?", "Active"],
+          ["Idea", "First sketch placeholder", "Attach a sketch or quick photo here. Crude drawings are valid engineering evidence.", "Draft"],
+          ["Calculation", "First useful calculation", "Add inputs, assumptions, and one number that matters.", "Draft"],
+          ["Test Plan", "First test plan", "What simple test would prove the design is moving in the right direction?", "Draft"],
+        ];
+        starter.forEach(([type, title, body, status], i) => {
+          state.entries.push({
+            id: uid("entry"), projectId: project.id, type, title, body, status, date: today(),
+            revision: project.revision || "", tags: ["starter"], measurements: [], calcRows: [], calcResult: "", attachments: [], relatedEntryIds: [],
+            createdAt: now, updatedAt: now,
+          });
+        });
       }
       function saveEntryFromForm(ev) {
         ev.preventDefault();
@@ -1863,6 +2005,7 @@
           id: "project-fume-extractor",
           name: "Portable Bench Fume Extractor",
           status: "Prototype",
+          mode: "Test",
           revision: "Rev C",
           owner: "Green Shoe Garage",
           targetDate: "2026-08-15",
@@ -1880,6 +2023,14 @@
             "Battery-powered soldering fume extractor",
             "Concept for a compact extractor that can sit beside a repair bench or travel with a field kit.",
             "Active",
+            "2026-07-01",
+            "Rev A",
+          ],
+          [
+            "Requirement",
+            "Must run safely from a 12 V battery",
+            "The object must run from a common 12 V pack without overheated connectors during sustained use.",
+            "Verified",
             "2026-07-01",
             "Rev A",
           ],
@@ -1974,7 +2125,7 @@
           createdAt: now,
           updatedAt: now,
         }));
-        entries[2].calcRows = [
+        entries[3].calcRows = [
           { name: "V", value: "12", unit: "V", note: "battery voltage" },
           { name: "I", value: "1.2", unit: "A", note: "fan current" },
           { name: "P", value: "V*I", unit: "W", note: "fan power" },
@@ -1986,16 +2137,16 @@
             note: "ideal runtime",
           },
         ];
-        entries[2].calcResult =
+        entries[3].calcResult =
           "V = 12 V // battery voltage\nI = 1.2 A // fan current\nP = 14.4 W // fan power\nAh = 6 Ah // battery capacity\nRuntime = 5 hours // ideal runtime";
-        entries[4].testObjective =
+        entries[5].testObjective =
           "Verify useful smoke capture with filter installed.";
-        entries[4].testSetup =
+        entries[5].testSetup =
           "Fan at full speed, carbon filter installed, smoke source 15 cm from intake.";
-        entries[4].expectedResult = "Visible smoke drawn into filter.";
-        entries[4].actualResult = "Pass at 15 cm, weak beyond 22 cm.";
-        entries[4].testEquipment = "Smoke source, phone sound meter, ruler";
-        entries[4].measurements = [
+        entries[5].expectedResult = "Visible smoke drawn into filter.";
+        entries[5].actualResult = "Pass at 15 cm, weak beyond 22 cm.";
+        entries[5].testEquipment = "Smoke source, phone sound meter, ruler";
+        entries[5].measurements = [
           {
             name: "Capture distance",
             value: "15",
@@ -2009,21 +2160,21 @@
             note: "phone app estimate",
           },
         ];
-        entries[5].failureSeverity = "Medium";
-        entries[5].affectedSubsystem = "Power input";
-        entries[5].failureSymptoms =
+        entries[6].failureSeverity = "Medium";
+        entries[6].affectedSubsystem = "Power input";
+        entries[6].failureSymptoms =
           "Connector hot after extended fan operation.";
-        entries[5].suspectedCause =
+        entries[6].suspectedCause =
           "Barrel jack contact resistance under sustained current.";
-        entries[5].confirmedCause = "High contact resistance at barrel jack.";
-        entries[5].correctiveAction = "Replace with XT30 connector and retest.";
-        entries[7].testObjective =
+        entries[6].confirmedCause = "High contact resistance at barrel jack.";
+        entries[6].correctiveAction = "Replace with XT30 connector and retest.";
+        entries[8].testObjective =
           "Confirm connector repair holds under sustained load.";
-        entries[7].testSetup = "XT30 installed, full fan speed, 30 minute run.";
-        entries[7].expectedResult = "Connector stays cool.";
-        entries[7].actualResult =
+        entries[8].testSetup = "XT30 installed, full fan speed, 30 minute run.";
+        entries[8].expectedResult = "Connector stays cool.";
+        entries[8].actualResult =
           "Pass. No meaningful temperature rise at connector.";
-        entries[7].measurements = [
+        entries[8].measurements = [
           { name: "Run time", value: "30", unit: "min", note: "continuous" },
           {
             name: "Connector temp",
@@ -2032,11 +2183,17 @@
             note: "near ambient",
           },
         ];
+        entries[3].relatedEntryIds = ["sample-entry-2"];
+        entries[5].relatedEntryIds = ["sample-entry-2", "sample-entry-3", "sample-entry-4"];
+        entries[6].relatedEntryIds = ["sample-entry-2", "sample-entry-5", "sample-entry-6"];
+        entries[7].relatedEntryIds = ["sample-entry-7"];
+        entries[8].relatedEntryIds = ["sample-entry-2", "sample-entry-7", "sample-entry-8"];
+        entries[10].relatedEntryIds = ["sample-entry-7", "sample-entry-8", "sample-entry-9"];
         state = {
           projects: [p],
           entries,
           selectedProjectId: p.id,
-          view: "notebook",
+          view: "story",
           activeTab: "All",
         };
         autosave("sample loaded");
@@ -2262,7 +2419,7 @@
               projects: [],
               entries: [],
               selectedProjectId: null,
-              view: "notebook",
+              view: "story",
               activeTab: "All",
             };
             localStorage.removeItem(STORAGE_KEY);
